@@ -17,3 +17,31 @@ The `MCPManager` class is the heart of the MCP integration. It:
 - Handles tool execution and error management
 - Synchronizes with Composio for external tool integration
 - Provides analytics on tool performance and usage patterns
+
+### Tool Registration
+
+Tools in OrganiX MCP follow a standard format:
+
+- **Name**: Unique identifier for the tool
+- **Description**: Human-readable description of the tool's functionality
+- **Function**: The actual implementation that executes when the tool is called
+- **Metadata**: Optional additional information about the tool
+
+Each tool can have optional input validation, error handling, and usage tracking.
+
+## Built-in Tools
+
+OrganiX comes with several built-in tools:
+
+### System Tools
+- `list_files` - List files in a directory
+- `execute_command` - Execute system commands (with security restrictions)
+
+### Web Research Tools
+- `web_search` - Search the web for information
+- `extract_url` - Extract content from a specific URL
+
+### Memory Tools
+- `retrieve_memory` - Retrieve relevant memories
+- `retrieve_memory_by_timeframe` - Get memories from a specific time period
+- `summarize_memories` - Generate summaries of recent memories
