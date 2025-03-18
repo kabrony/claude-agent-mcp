@@ -299,3 +299,144 @@ Zero-knowledge proofs enable:
 - Verifiable computations without revealing inputs
 - Identity verification without revealing personal information
 - Data sharing with cryptographic guarantees
+
+## Blockchain Capabilities
+
+OrganiX integrates with blockchain technology, particularly Solana, to provide:
+
+### Wallet Integration
+
+The system supports Phantom wallet integration:
+
+```python
+# Generate HTML for Phantom wallet connection
+html = solana_integration.create_agent_wallet_button_html("OrganiX Dashboard")
+```
+
+### Blockchain Data Access
+
+The system can retrieve and analyze various blockchain data:
+
+```python
+# Get SOL balance
+balance = await solana_integration.get_solana_balance("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+
+# Get token accounts
+tokens = await solana_integration.get_solana_token_accounts("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+
+# Get NFTs
+nfts = await solana_integration.get_nfts_by_owner("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+
+# Get recent transactions
+txs = await solana_integration.get_recent_solana_transactions("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+
+# Get comprehensive blockchain data
+data = await coordinator.get_blockchain_data("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+```
+
+### Solana Agents
+
+The system incorporates Solana Agents, a next-generation technology that combines AI with blockchain:
+
+- Autonomous agents that can operate on-chain
+- Secure, verifiable execution of AI-driven operations
+- Integration with Solana's Account Model
+- Support for Program-Derived Addresses (PDAs)
+
+## Extending the System
+
+OrganiX is designed to be highly extensible. Here's how to extend the system with new capabilities:
+
+### Adding New Tools
+
+To add a new tool:
+
+```python
+# Define the tool function
+async def my_tool_function(param1, param2):
+    # Tool implementation
+    result = process_data(param1, param2)
+    return result
+
+# Register with MCP Manager
+mcp.register_tool(
+    "my_new_tool",
+    "Description of what my tool does",
+    my_tool_function
+)
+```
+
+### Creating New Agents
+
+To create a new specialized agent:
+
+```python
+# Define the agent persona
+new_agent = ChatPersona(
+    name="My Specialist",
+    description="Specialized in my particular domain",
+    system_prompt="""You are a specialist agent within OrganiX.
+Your primary role is to provide expertise on your domain.
+When responding, prioritize accuracy and clarity."""
+)
+
+# Register with the coordinator
+coordinator.register_agent("my_agent", new_agent)
+```
+
+### Custom Memory Types
+
+To add custom memory handling:
+
+```python
+# Add memory with custom type and metadata
+memory_id = memory_system.add_memory(
+    "semantic",  # Memory type
+    content,     # The content to store
+    {
+        "type": "my_custom_type",
+        "source": "custom_source",
+        "custom_field": "custom_value"
+    },
+    importance=4  # Higher importance (1-5)
+)
+```
+
+## Best Practices
+
+When working with OrganiX MCP, follow these best practices:
+
+### Tool Design
+
+1. **Keep tools simple and focused**: Each tool should do one thing well
+2. **Provide clear descriptions**: Make it easy for the system to understand when to use the tool
+3. **Handle errors gracefully**: Return clear error messages that the AI can interpret
+4. **Include validation**: Validate inputs before execution
+5. **Document schema**: Clearly document the expected inputs and outputs
+
+### Agent Routing
+
+1. **Use appropriate system prompts**: Each specialist agent should have a clear, focused system prompt
+2. **Test routing logic**: Verify that queries are routed to the appropriate agents
+3. **Combine agents when needed**: Use multi-agent collaboration for complex queries
+4. **Track routing performance**: Monitor how effectively queries are routed to identify improvements
+
+### Memory Management
+
+1. **Use appropriate importance ratings**: Reserve high importance (4-5) for critical information
+2. **Include rich metadata**: Add detailed metadata to help with retrieval
+3. **Regularly maintain memory**: Prune old, low-importance memories periodically
+4. **Optimize retrieval queries**: Be specific when retrieving memories
+
+### Security Considerations
+
+1. **Limit command execution**: Restrict system command execution to safe operations
+2. **Validate blockchain addresses**: Always validate addresses before querying blockchain data
+3. **Use ZK proofs for sensitive data**: Leverage zero-knowledge proofs when handling private information
+4. **Sanitize inputs and outputs**: Validate all inputs and sanitize outputs to prevent injection attacks
+
+## Conclusion
+
+The OrganiX Model Context Protocol integration provides a powerful, flexible framework for building advanced AI agents. By leveraging MCP, Composio, and specialized agents, OrganiX enables sophisticated interactions with tools, blockchain systems, and more.
+
+For further assistance or to report issues, please contact the OrganiX development team or visit our GitHub repository.
