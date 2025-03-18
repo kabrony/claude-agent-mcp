@@ -137,3 +137,63 @@ for address in addresses:
     result = await agent.mcp.process_with_tools(f"What's the SOL balance of {address}?")
     print(f"Balance for {address}: {result}")
 ```
+
+## Composio Integration
+
+OrganiX features deep integration with Composio, a platform that extends MCP with additional capabilities:
+
+### Synchronization
+
+The MCP Manager automatically synchronizes with Composio to:
+
+1. Register local tools with the Composio platform
+2. Import tools from Composio to the local environment
+3. Maintain consistent tool definitions across environments
+
+```python
+# Sync tools with Composio
+await mcp.refresh_composio_tools()
+```
+
+### Composio CLI
+
+The integration includes support for the Composio CLI, allowing command-line operations:
+
+```bash
+# Install Composio CLI
+composio_client.install_cli()
+
+# Configure CLI with credentials
+composio_client.configure_cli()
+
+# Run CLI commands
+result = composio_client.run_cli_command("list tools")
+```
+
+### Connection Management
+
+OrganiX provides several methods to manage Composio connections:
+
+```python
+# Check connection status
+status = await composio_client.check_connection()
+
+# List available tools
+tools = await composio_client.list_tools()
+
+# Execute a specific tool
+result = await composio_client.execute_tool("tool_name", {"param1": "value1"})
+```
+
+### Configuration
+
+Configure Composio integration through environment variables:
+
+```
+COMPOSIO_API_KEY=your_api_key_here
+COMPOSIO_CONNECTION_ID=your_connection_id
+COMPOSIO_INTEGRATION_ID=your_integration_id
+COMPOSIO_BASE_URL=your_base_url
+```
+
+These settings can also be managed through the `model_manager.py` environment profiles.
