@@ -1,22 +1,92 @@
 # OrganiX Claude Agent
 
-OrganiX is a powerful personal agent with cross-platform capabilities and Model Context Protocol (MCP) integration using the Claude 3.7 API.
+OrganiX is a powerful personal agent with cross-platform capabilities and Model Context Protocol (MCP) integration using the Claude 3.7 API. This agent features enhanced memory capabilities and advanced AI chat functionality.
 
 ## Features
 
-- 🧠 **Advanced Memory System**: Utilizes ChromaDB for episodic, semantic, and procedural memory
+- 🧠 **Advanced Memory System**: Multi-tiered ChromaDB-based memory with episodic, semantic, and procedural memory types
+- 🤖 **Enhanced Claude Integration**: Conversation management, streaming, tool integration, and extended thinking
 - 🔄 **Cross-Platform Operations**: Seamlessly works across Windows and Linux environments
 - 🔍 **Web Research Capabilities**: Integrated with Exa for comprehensive web search and content extraction
-- 🧰 **Tool Integration**: Full MCP support for extensible tool usage
-- 📊 **Rich Terminal Interface**: Beautifully formatted outputs using Rich
+- 🧰 **Full MCP Support**: Extensible tool usage with structured formats
+- 📊 **Rich Terminal Interface**: Beautifully formatted outputs and dashboards using Rich
 - 🔄 **Streaming Support**: Real-time streaming responses from Claude API
 - 💻 **Remote System Connectivity**: SSH integration for remote Ubuntu systems
+- 📈 **Memory Analytics**: Track and analyze memory usage statistics
+- 🔄 **Conversation Management**: Save, load, and switch between conversations
+
+## System Architecture
+
+```mermaid
+graph TD
+    A[User Interface] --> B[ClaudeAgent]
+    B --> C[ClaudeClient]
+    B --> D[MemorySystem]
+    B --> E[MCPManager]
+    B --> F[SystemBridge]
+    B --> G[WebResearcher]
+    
+    C -->|API Calls| H[Claude 3.7 API]
+    D -->|Vector Store| I[ChromaDB]
+    E -->|Tool Registry| J[MCP Tools]
+    F -->|System Operations| K[Local/Remote Systems]
+    G -->|Web Search| L[Exa API]
+    
+    subgraph Memory Types
+        I --> M[Episodic Memory]
+        I --> N[Semantic Memory]
+        I --> O[Procedural Memory]
+    end
+    
+    subgraph UI Options
+        A --> P[CLI]
+        A --> Q[Terminal Dashboard]
+        A --> R[Web Dashboard]
+    end
+```
+
+## Memory System
+
+The enhanced memory system uses ChromaDB for vector storage and retrieval, with three distinct memory types:
+
+```mermaid
+graph LR
+    A[User Query] --> B[Agent Processing]
+    B --> C[Memory System]
+    
+    C --> D[Episodic Memory]
+    C --> E[Semantic Memory]
+    C --> F[Procedural Memory]
+    
+    D -->|Stores| G[Conversations]
+    D -->|Tracks| H[User Interactions]
+    
+    E -->|Stores| I[Key Facts]
+    E -->|Organizes| J[Research Results]
+    
+    F -->|Records| K[Tool Usage Patterns]
+    F -->|Remembers| L[System Operations]
+    
+    C --> M[Memory Maintenance]
+    M -->|Prunes| N[Old Memories]
+    M -->|Preserves| O[Important Memories]
+    
+    C --> P[Memory Retrieval]
+    P -->|Based on| Q[Relevance]
+    P -->|Filtered by| R[Importance]
+    P -->|Organized by| S[Timeframe]
+```
 
 ## Quick Start
 
 ### Windows
 
 1. Clone this repository
+```bash
+git clone https://github.com/kabrony/claude-agent-mcp.git
+cd claude-agent-mcp
+```
+
 2. Run `install_dependencies.bat` to set up the environment
 3. Create a `.env` file with your API keys (see Environment Variables section)
 4. Activate the virtual environment: `venv\Scripts\activate`
@@ -25,6 +95,11 @@ OrganiX is a powerful personal agent with cross-platform capabilities and Model 
 ### Linux/Mac
 
 1. Clone this repository
+```bash
+git clone https://github.com/kabrony/claude-agent-mcp.git
+cd claude-agent-mcp
+```
+
 2. Make the installation script executable: `chmod +x install_dependencies.sh`
 3. Run `./install_dependencies.sh` to set up the environment
 4. Create a `.env` file with your API keys (see Environment Variables section)
@@ -58,11 +133,13 @@ python dashboard.py
 python dashboard.py --query "What's the latest news on AI?"
 ```
 
-The dashboard provides:
-- Real-time conversation history
+The enhanced dashboard provides:
+- Real-time conversation history with markdown rendering
 - System information monitoring
-- Memory statistics
-- Interactive query input
+- Detailed memory statistics and analytics
+- Tool availability indicators
+- Multiple conversation management
+- Interactive query input with extended thinking option
 
 ### Basic Commands
 
@@ -73,11 +150,26 @@ python agent.py --query "What is the weather today?"
 # Stream a response (real-time output)
 python agent.py --query "Tell me about quantum computing" --stream
 
+# Use tools for a query
+python agent.py --query "List the files in my current directory" --tools
+
+# Use extended thinking mode
+python agent.py --query "Explain the theory of relativity" --extended-thinking
+
 # Research a topic
 python agent.py --research "Climate change solutions"
 
 # Display agent information
 python agent.py
+
+# Perform memory maintenance
+python agent.py --maintenance
+
+# Save conversation to file
+python agent.py --save my_conversation.json
+
+# Load conversation from file
+python agent.py --load my_conversation.json
 ```
 
 ### Advanced Usage
@@ -90,8 +182,17 @@ from agent import ClaudeAgent
 async def main():
     agent = ClaudeAgent()
     
-    # Process a query
-    response = await agent.process_query("What is the meaning of life?")
+    # Process a query with extended thinking
+    response = await agent.process_query(
+        "What is the meaning of life?", 
+        extended_thinking=True
+    )
+    print(response)
+    
+    # Process a query with tools
+    response = await agent.process_query_with_tools(
+        "What's the current time and weather in New York?"
+    )
     print(response)
     
     # Research a topic
@@ -101,75 +202,74 @@ async def main():
     # Connect to remote system
     result = await agent.connect_to_remote("your-server.com", "username", password="password")
     print(result)
+    
+    # Get memory statistics
+    stats = agent.get_memory_stats()
+    print(stats)
+    
+    # Summarize recent memories
+    summary = agent.summarize_memories(days=7)
+    print(summary)
+    
+    # Create new conversation
+    agent.create_new_conversation("Philosophy Discussion")
 
 asyncio.run(main())
 ```
 
-## Architecture
+## Enhanced Components
 
-The agent is built on a modular architecture with the following components:
+### Improved Memory System
 
-- **Claude Client**: Handles communication with the Claude API
-- **Memory System**: Manages different types of memory using ChromaDB
-- **System Bridge**: Provides cross-platform operation capabilities
-- **MCP Manager**: Implements the Model Context Protocol for tool usage
-- **Web Researcher**: Handles web search and information extraction
+The refactored memory system features:
 
-## Tool Integration
+- **Memory Importance Rating**: Prioritize memories by importance
+- **Memory Caching**: Faster retrieval of frequently accessed memories
+- **Timeframe-based Retrieval**: Access memories from specific time periods
+- **Memory Maintenance**: Automatically prune old, low-importance memories
+- **Memory Summarization**: Generate summaries of recent memories
+- **Memory Analytics**: Track and analyze memory usage patterns
 
-The agent comes with several built-in tools:
+### Enhanced Claude Client
 
-| Tool | Description |
-|------|-------------|
-| `list_files` | Lists files in a directory |
-| `web_search` | Searches the web for information |
-| `extract_url` | Extracts content from a specific URL |
-| `execute_command` | Executes commands on the local system |
-| `retrieve_memory` | Retrieves memories relevant to a query |
+The improved Claude client includes:
 
-## Development
+- **Multiple Conversation Management**: Create, save, and switch between conversations
+- **Tools Integration**: Seamless integration with MCP tools
+- **Extended Thinking Mode**: Enable deeper reasoning for complex queries
+- **Response Analysis**: Extract key points and analyze sentiment
+- **Streaming Support**: Real-time response streaming
+- **Usage Analytics**: Track token usage and API calls
 
-### Project Structure
+## Project Structure
 
 ```
 claude-agent-mcp/
-├── agent.py            # Main agent implementation
-├── claude_client.py    # Claude API client
-├── dashboard.py        # Terminal dashboard interface
-├── memory_system.py    # Memory management
-├── mcp_manager.py      # Model Context Protocol integration
-├── system_bridge.py    # Cross-platform functionality
-├── web_research.py     # Web search capabilities
-├── utils.py            # Utility functions
-├── requirements.txt    # Dependencies
-├── install_dependencies.bat  # Windows setup
-└── install_dependencies.sh   # Linux/Mac setup
+├── agent.py                # Enhanced main agent implementation
+├── claude_client.py        # Advanced Claude API client with conversation management
+├── dashboard.py            # Rich terminal dashboard with memory analytics
+├── memory_system.py        # Improved memory system with caching and importance ratings
+├── mcp_manager.py          # Model Context Protocol integration
+├── system_bridge.py        # Cross-platform functionality
+├── web_research.py         # Web search capabilities
+├── utils.py                # Utility functions
+├── web_server.py           # Web dashboard backend
+├── web_dashboard/          # Web UI files
+│   └── index.html          # Web dashboard frontend
+├── requirements.txt        # Dependencies
+├── install_dependencies.bat # Windows setup
+└── install_dependencies.sh  # Linux/Mac setup
 ```
 
-### Adding New Tools
+## GitHub Integration
 
-To add a new tool to the agent, edit the `_register_tools` method in `agent.py`:
+This project is hosted on GitHub at [https://github.com/kabrony/claude-agent-mcp](https://github.com/kabrony/claude-agent-mcp). To contribute:
 
-```python
-def _register_tools(self):
-    # ... existing tools
-    
-    # Add your new tool
-    self.mcp.register_tool(
-        "your_tool_name",
-        "Description of what your tool does",
-        your_tool_function
-    )
-```
-
-### Extending the Dashboard
-
-The terminal dashboard can be customized by modifying `dashboard.py`. Here are some example extensions:
-
-- Add new panels for specific tools
-- Customize the appearance with Rich styles
-- Add keyboard shortcuts for common actions
-- Implement visualizations for memory statistics
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add some amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
 ## Requirements
 
