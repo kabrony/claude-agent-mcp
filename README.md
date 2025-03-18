@@ -46,6 +46,24 @@ You can obtain these API keys from:
 
 ## Usage
 
+### Terminal Dashboard
+
+OrganiX includes a rich terminal dashboard for interactive use:
+
+```bash
+# Launch the dashboard
+python dashboard.py
+
+# Start dashboard with initial query
+python dashboard.py --query "What's the latest news on AI?"
+```
+
+The dashboard provides:
+- Real-time conversation history
+- System information monitoring
+- Memory statistics
+- Interactive query input
+
 ### Basic Commands
 
 ```bash
@@ -117,6 +135,7 @@ The agent comes with several built-in tools:
 claude-agent-mcp/
 ├── agent.py            # Main agent implementation
 ├── claude_client.py    # Claude API client
+├── dashboard.py        # Terminal dashboard interface
 ├── memory_system.py    # Memory management
 ├── mcp_manager.py      # Model Context Protocol integration
 ├── system_bridge.py    # Cross-platform functionality
@@ -143,6 +162,15 @@ def _register_tools(self):
     )
 ```
 
+### Extending the Dashboard
+
+The terminal dashboard can be customized by modifying `dashboard.py`. Here are some example extensions:
+
+- Add new panels for specific tools
+- Customize the appearance with Rich styles
+- Add keyboard shortcuts for common actions
+- Implement visualizations for memory statistics
+
 ## Requirements
 
 - Python 3.8 or higher
@@ -157,3 +185,4 @@ MIT License
 - Built with [Anthropic Claude 3.7](https://www.anthropic.com/claude)
 - Utilizes [ChromaDB](https://github.com/chroma-core/chroma) for vector storage
 - Enhanced with [Exa](https://exa.ai) for web search capabilities
+- Terminal UI powered by [Rich](https://github.com/Textualize/rich)
