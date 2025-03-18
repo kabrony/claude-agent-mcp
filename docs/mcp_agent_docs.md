@@ -251,3 +251,241 @@ mcp.register_tool(
     }
 )
 ```
+
+## Extending the System
+
+OrganiX is designed to be extended with new tools and capabilities:
+
+### Creating Custom Tools
+
+You can create custom tools for specific needs:
+
+```python
+# Create a custom tool
+async def sentiment_analysis(text):
+    # Implement sentiment analysis
+    # This could use a local model or API
+    sentiment_score = calculate_sentiment(text)
+    return {
+        "score": sentiment_score,
+        "classification": "positive" if sentiment_score > 0 else "negative"
+    }
+
+# Register the tool
+mcp.register_tool(
+    "analyze_sentiment",
+    "Analyze sentiment of text",
+    sentiment_analysis
+)
+```
+
+### Tool Schema Definition
+
+For more complex tools, define input schemas:
+
+```python
+# Define schema for a tool
+schema = {
+    "type": "object",
+    "properties": {
+        "text": {
+            "type": "string",
+            "description": "The text to analyze"
+        },
+        "detailed": {
+            "type": "boolean",
+            "description": "Whether to return detailed analysis"
+        }
+    },
+    "required": ["text"]
+}
+
+# Register with schema
+mcp.register_tool_with_schema(
+    "advanced_analysis",
+    "Perform advanced text analysis",
+    analyze_text_function,
+    schema
+)
+```
+
+### External API Integration
+
+Connect to external APIs:
+
+```python
+# Create a tool that uses an external API
+async def weather_forecast(location):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            f"https://weather-api.example.com/forecast?location={location}"
+        ) as response:
+            data = await response.json()
+            return {
+                "forecast": data["forecast"],
+                "temperature": data["temperature"],
+                "precipitation": data["precipitation"]
+            }
+
+# Register the tool
+mcp.register_tool(
+    "get_weather_forecast",
+    "Get weather forecast for a location",
+    weather_forecast
+)
+```
+
+### Custom Agent Creation
+
+Create specialized agents for specific domains:
+
+```python
+# Create a custom agent
+from advanced_chat import ChatPersona, coordinator
+
+finance_agent = ChatPersona(
+    name="Finance Specialist",
+    description="Specialized in financial analysis and advice",
+    system_prompt="""You are a Finance Specialist agent within OrganiX.
+Your primary role is to provide financial analysis and advice.
+You excel at interpreting market data, evaluating investments,
+and explaining financial concepts in clear terms."""
+)
+
+# Register the agent
+coordinator.register_agent("finance", finance_agent)
+```
+
+## Zero-Knowledge Integration
+
+OrganiX integrates zero-knowledge proof capabilities for enhanced privacy and security:
+
+### Creating ZK Proofs
+
+Zero-knowledge proofs allow proving knowledge without revealing the underlying information:
+
+```python
+# Create a proof of knowledge
+proof = await zk_proofs.create_proof_of_knowledge("secret_information")
+
+# Share proof without revealing secret
+share_proof(proof)
+```
+
+### Proof of Ownership
+
+Prove ownership of assets without revealing identity:
+
+```python
+# Prove ownership of an NFT
+proof = await zk_proofs.create_proof_of_ownership(
+    "FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP",  # Address
+    "NFT1234"  # Asset ID
+)
+```
+
+### Verification
+
+Verify proofs without accessing the original data:
+
+```python
+# Verify a proof
+verification_result = zk_proofs.verify_proof(proof)
+if verification_result["verified"]:
+    # Grant access or privileges
+    grant_access(user)
+```
+
+## Blockchain Capabilities
+
+OrganiX provides comprehensive blockchain integration, focusing on Solana:
+
+### Wallet Connection
+
+Connect to Phantom wallet:
+
+```python
+# Generate wallet connection link or button
+html = solana_integration.create_agent_wallet_button_html("OrganiX DApp")
+
+# In web interface
+display_html(html)
+```
+
+### Account Information
+
+Retrieve account information:
+
+```python
+# Get Solana account balance
+balance = await solana_integration.get_solana_balance("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+print(f"SOL Balance: {balance['balance']['sol']}")
+
+# Get token accounts
+tokens = await solana_integration.get_solana_token_accounts("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+```
+
+### NFT Integration
+
+Work with NFTs:
+
+```python
+# Get NFTs owned by address
+nfts = await solana_integration.get_nfts_by_owner("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+
+# Display NFT information
+for nft in nfts["nfts"]:
+    display_nft(nft)
+```
+
+### Transaction History
+
+Access transaction history:
+
+```python
+# Get recent transactions
+transactions = await solana_integration.get_recent_solana_transactions(
+    "FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP",
+    limit=5
+)
+```
+
+## Best Practices
+
+To get the most out of OrganiX MCP, follow these best practices:
+
+### Tool Design
+
+- **Simple Responsibility**: Each tool should do one thing well
+- **Clear Description**: Provide descriptive names and documentation
+- **Error Handling**: Include robust error handling in tool implementations
+- **Validation**: Validate inputs before processing
+- **Asynchronous Design**: Use async functions for I/O-bound operations
+
+### Agent Interaction
+
+- **Be Specific**: When querying, be specific about your needs
+- **Use Natural Language**: No need for special syntax
+- **Leverage Context**: References to previous interactions work naturally
+- **Specify Agent**: You can request a specific agent with "I'd like the Finance Specialist to help with..."
+
+### Security Considerations
+
+- **Credential Management**: Store API keys and secrets securely in .env
+- **Permission Scoping**: Limit tool capabilities to necessary functions
+- **Input Sanitization**: Validate and sanitize all inputs
+- **Audit Tool Usage**: Regularly review tool usage patterns
+
+### Performance Optimization
+
+- **Cache Results**: Cache frequently used results
+- **Parallel Execution**: Use asyncio to parallelize operations
+- **Resource Management**: Close connections and resources when done
+- **Selective Memory**: Store only important information in memory
+
+### Extending the System
+
+- **Test New Tools**: Thoroughly test tools before deployment
+- **Document Everything**: Document tool purpose, inputs, outputs, and examples
+- **Version Control**: Maintain version control for tool definitions
+- **Modular Design**: Keep tools modular for easier maintenance
