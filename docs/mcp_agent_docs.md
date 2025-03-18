@@ -17,9 +17,7 @@ This document provides comprehensive documentation on how MCP is integrated into
 7. [Extending the System](#extending-the-system)
 8. [Zero-Knowledge Integration](#zero-knowledge-integration)
 9. [Blockchain Capabilities](#blockchain-capabilities)
-10. [AI Model Integration](#ai-model-integration)
-11. [Browser Integration](#browser-integration)
-12. [Best Practices](#best-practices)
+10. [Best Practices](#best-practices)
 
 ## Architecture
 
@@ -158,269 +156,183 @@ result = composio_client.run_cli_command("list tools")
 
 ## Multi-Agent Coordination
 
-OrganiX implements a sophisticated multi-agent coordination system that allows specialized agents to collaborate on complex tasks.
+OrganiX implements a sophisticated multi-agent coordination system that leverages MCP for tool access across specialized agents:
 
 ### Agent Types
 
 The system includes several specialized agents:
 
-- **Research Specialist**: Expert in information gathering and synthesis
-- **Code Specialist**: Expert in code generation and analysis
-- **Blockchain Specialist**: Expert in blockchain technologies and operations
-- **MCP Specialist**: Expert in tool usage and integration
-- **AGI Specialist**: Expert in complex reasoning across domains
+- **Researcher Agent**: Focuses on information retrieval and synthesis
+- **Coder Agent**: Specializes in code generation and analysis
+- **Blockchain Agent**: Handles blockchain interactions and data
+- **MCP Specialist**: Manages tool selection and usage
+- **AGI Specialist**: Tackles complex, multi-domain problems
 
-### Coordination Mechanisms
+### Coordination Flow
 
-Agents collaborate through several mechanisms:
+1. User queries are analyzed for intent
+2. The appropriate specialized agent is selected
+3. The agent leverages MCP tools as needed
+4. Results are processed and returned to the user
 
-1. **Intent-based routing**: Queries are automatically routed to the most appropriate agent
-2. **Multi-agent collaboration**: Multiple agents can work on a single query
-3. **Synthesis**: The AGI specialist can synthesize insights from multiple agents
+For complex queries, multiple agents can collaborate:
 
 ```python
-# Example: Multi-agent collaboration
-from advanced_chat import coordinator
-
+# Multi-agent collaboration
 result = await coordinator.multi_agent_collaboration(
-    "How can I build a Solana dApp that uses AI for predictive analytics?"
+    "Create a Python app that analyzes Solana NFTs with zero-knowledge proofs"
 )
 ```
 
 ## Advanced Capabilities
 
-### Zero-Knowledge Integration
+### Intent Detection
 
-OrganiX supports zero-knowledge proofs for privacy-preserving operations:
+The system automatically detects user intent to route queries appropriately:
 
 ```python
-# Create a zero-knowledge proof of knowledge
-proof = await coordinator.create_zero_knowledge_proof(
-    "knowledge", 
-    {"secret_data": "sensitive information"}
-)
-
-# Verify the proof
-verification = await coordinator.verify_zero_knowledge_proof(proof)
+intent = ChatIntent("What's the current price of Solana?")
+print(intent.primary_intent)  # "blockchain"
+print(intent.confidence)      # 0.75
 ```
 
-### Blockchain Capabilities
+### Context Awareness
 
-The system offers comprehensive blockchain capabilities with Solana integration:
-
-```python
-# Get blockchain data for an address
-data = await coordinator.get_blockchain_data("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
-
-# Generate Phantom wallet connection HTML
-connect_button = coordinator.get_phantom_connect_html("My dApp")
-```
-
-## AI Model Integration
-
-OrganiX supports integration with multiple AI models to leverage their unique capabilities.
-
-### Claude Integration
-
-Claude is the primary AI model powering OrganiX, with deep integration:
+All tools have access to relevant context from the memory system:
 
 ```python
-from claude_client import ClaudeClient
-
-# Initialize client
-client = ClaudeClient()
-
-# Send a message
-response = await client.send_message("What are the benefits of MCP?")
-
-# Use streaming for real-time responses
-async for chunk in client.stream_message("Tell me about Solana..."):
-    print(chunk, end="")
-```
-
-### Perplexity Integration
-
-Perplexity AI is integrated for enhanced search and knowledge retrieval:
-
-```python
-from perplexity_integration import perplexity_client
-
-# Search with Perplexity
-results = await perplexity_client.search("Latest developments in ZK proofs")
-
-# Focus search on academic sources
-academic_results = await perplexity_client.academic_search("quantum computing advances")
-```
-
-### OpenAI Integration
-
-OpenAI models can be used for specialized tasks:
-
-```python
-from openai_integration import openai_client
-
-# Generate embeddings
-embeddings = await openai_client.create_embeddings("Text to embed")
-
-# Use GPT for specific tasks
-response = await openai_client.generate(
-    "Summarize this technical paper",
-    model="gpt-4"
+result = await coordinator.process_with_context_awareness(
+    "Tell me more about that blockchain project we discussed"
 )
 ```
 
-### DeepSeek Integration
+### Tool Usage Analytics
 
-DeepSeek models are available for code generation and analysis:
-
-```python
-from deepseek_integration import deepseek_client
-
-# Generate code
-code = await deepseek_client.generate_code(
-    "Create a sorting algorithm that works in O(n log n) time"
-)
-```
-
-## Browser Integration
-
-OrganiX supports deep integration with browsers for enhanced web interaction.
-
-### Brave Integration
-
-The Brave browser integration allows for privacy-focused web operations:
+The MCP Manager tracks detailed analytics about tool usage:
 
 ```python
-from brave_integration import brave_client
-
-# Search with Brave
-results = await brave_client.search("Privacy-preserving technologies")
-
-# Use Brave's privacy features
-private_results = await brave_client.private_search("My sensitive query")
-```
-
-### Browser Automation
-
-OrganiX can automate browser interactions for complex workflows:
-
-```python
-from browser_automation import browser
-
-# Navigate to a page
-await browser.navigate("https://example.com")
-
-# Fill a form
-await browser.fill_form({
-    "username": "user",
-    "password": "pass"
-})
-
-# Click a button
-await browser.click("#submit-button")
+stats = mcp.get_tool_usage_stats()
+print(f"Most used tool: {max(stats.items(), key=lambda x: x[1]['usage_count'])[0]}")
 ```
 
 ## Extending the System
 
-OrganiX is designed for easy extension with new tools, agents, and capabilities.
-
 ### Adding New Tools
+
+Adding new tools to OrganiX is straightforward:
 
 ```python
 # Add a custom tool
 mcp.register_tool(
-    "sentiment_analysis",
-    "Analyze sentiment of text",
-    lambda text: analyze_sentiment(text)
+    "translate_text",
+    "Translate text between languages",
+    async_translation_function,
+    source="custom"
 )
 ```
 
 ### Creating Custom Agents
 
+You can create custom specialized agents:
+
 ```python
-from advanced_chat import ChatPersona, coordinator
-
 # Create a custom agent
-finance_agent = ChatPersona(
-    name="Finance Specialist",
-    description="Expert in financial analysis and advice",
-    system_prompt="You are a financial expert specializing in cryptocurrency..."
+coordinator.register_agent(
+    "financial_advisor",
+    ChatPersona(
+        name="Financial Advisor",
+        description="Specialized in financial analysis and advice",
+        system_prompt="You are a financial advisor specialized in..."
+    )
 )
-
-# Register the agent
-coordinator.register_agent("finance", finance_agent)
 ```
 
-### Integrating New Services
+### Tool Development Guidelines
 
-The system can be extended with new external services:
+When developing new tools:
+
+1. Make tools atomic and focused on a single capability
+2. Include clear error handling and input validation
+3. Add comprehensive documentation
+4. Test with a variety of inputs
+5. Consider performance implications
+
+## Zero-Knowledge Integration
+
+OrganiX includes zero-knowledge capabilities that protect privacy while enabling verification:
+
+### Creating ZK Proofs
 
 ```python
-# Register a new service client
-service_client = ExternalServiceClient(api_key="your_api_key")
+# Create a proof of knowledge
+proof = await zk_proofs.create_proof_of_knowledge(sensitive_data)
 
-# Create a tool that uses the service
-mcp.register_tool(
-    "external_service",
-    "Use the external service API",
-    service_client.make_request
-)
+# Create a proof of ownership
+proof = await zk_proofs.create_proof_of_ownership(wallet_address, asset_id)
+```
+
+### Verifying ZK Proofs
+
+```python
+# Verify a proof
+verification = await zk_proofs.verify_proof(proof)
+```
+
+## Blockchain Capabilities
+
+OrganiX integrates deeply with the Solana blockchain:
+
+### Wallet Integration
+
+```python
+# Generate a Phantom wallet connection button
+html = solana_integration.create_agent_wallet_button_html("OrganiX DApp")
+```
+
+### Blockchain Data Access
+
+```python
+# Get account data
+balance = await solana_integration.get_solana_balance(address)
+tokens = await solana_integration.get_solana_token_accounts(address)
+nfts = await solana_integration.get_nfts_by_owner(address)
+```
+
+### Transaction Analysis
+
+```python
+# Get recent transactions
+txs = await solana_integration.get_recent_solana_transactions(address)
 ```
 
 ## Best Practices
 
 ### Security Considerations
 
-- Always validate user inputs before passing to tools
-- Use environment variables for API keys and secrets
-- Implement rate limiting for external API calls
-- Apply proper error handling for all tool executions
+1. Never expose private keys or sensitive credentials through tools
+2. Implement proper permission checks on system-level tools
+3. Sanitize all user inputs before execution
+4. Use zero-knowledge proofs when handling sensitive data
+5. Implement rate limiting on resource-intensive tools
 
 ### Performance Optimization
 
-- Use the memory cache for frequently accessed data
-- Implement parallel processing for independent operations
-- Optimize token usage in AI model calls
-- Consider streaming responses for long outputs
+1. Cache frequent tool results when appropriate
+2. Use asynchronous execution for I/O-bound operations
+3. Batch similar operations when possible
+4. Monitor tool execution times and optimize slow tools
+5. Implement timeout mechanisms for external API calls
 
-### Development Workflow
+### Reliability
 
-1. Create a feature branch for new capabilities
-2. Test tools in isolation before registration
-3. Update documentation with new features
-4. Follow the pull request workflow for contributions
+1. Implement proper error handling for all tools
+2. Add retry logic for network-dependent operations
+3. Provide fallback mechanisms when primary tools fail
+4. Log detailed error information for debugging
+5. Regularly test tools with edge cases
 
-## Troubleshooting
+## Conclusion
 
-### Common Issues
+The OrganiX MCP integration provides a powerful framework for extending AI capabilities through standardized tool access. By following the guidelines and best practices in this documentation, you can leverage these capabilities to build sophisticated agent systems that integrate with blockchain, zero-knowledge technology, and other advanced features.
 
-- **Tool Execution Failures**: Verify API keys and network connectivity
-- **Memory Errors**: Check disk space for persistent memory store
-- **Model Integration Issues**: Ensure API key permissions are correct
-- **Browser Integration Problems**: Check WebDriver compatibility
-
-### Logging and Monitoring
-
-OrganiX includes comprehensive logging:
-
-```python
-from utils import log
-
-# Log different levels
-log.debug("Detailed debug information")
-log.info("General information")
-log.warning("Warning message")
-log.error("Error message")
-```
-
-### Getting Help
-
-For issues, questions, or feature requests:
-
-- Create an issue on the GitHub repository
-- Contact the OrganiX development team
-- Check the FAQ in the project wiki
-
----
-
-*This documentation is maintained by the OrganiX team and is updated regularly to reflect the latest capabilities and best practices.*
+For additional help or to report issues, contact the OrganiX development team or open an issue on GitHub.
