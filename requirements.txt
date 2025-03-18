@@ -1,0 +1,10 @@
+aiohttp==3.9.1
+anthropic==0.22.0
+asyncio==3.4.3
+chromadb==0.4.24
+composio-sdk==0.1.5
+modelcontextprotocol-python-sdk==0.1.0
+paramiko==3.3.1
+python-dotenv==1.0.1
+rich==13.7.0
+numpy==1.25.2
