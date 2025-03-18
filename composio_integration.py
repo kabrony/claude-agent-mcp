@@ -1,202 +1,357 @@
 """
-Composio Integration for OrganiX - Handles integration with Composio APIs and tools
+Composio Integration - Handles integration with Composio API for MCP
 """
 import os
 import json
+import aiohttp
 import asyncio
-import logging
+import subprocess
+import time
 from dotenv import load_dotenv
-from typing import Dict, List, Any, Optional
+from utils import log
 
-try:
-    import composio
-    from composio.client import ComposioClient
-    from composio.client.collections import TriggerEventData
-except ImportError:
-    logging.error("Composio SDK not installed. Please run: pip install composio-core composio-langchain")
-    
 # Load environment variables
 load_dotenv()
 
-class ComposioIntegration:
-    def __init__(self, api_key=None):
-        # Get API key from environment or parameter
-        self.api_key = api_key or os.getenv("COMPOSIO_API_KEY")
-        if not self.api_key:
-            logging.warning("COMPOSIO_API_KEY not found in environment variables. Some features will be disabled.")
-            
-        # Connection IDs from the environment
+class ComposioClient:
+    def __init__(self):
+        # Load credentials
+        self.api_key = os.getenv("COMPOSIO_API_KEY")
         self.connection_id = os.getenv("COMPOSIO_CONNECTION_ID")
         self.integration_id = os.getenv("COMPOSIO_INTEGRATION_ID")
+        self.base_url = os.getenv("COMPOSIO_BASE_URL", "https://api.composio.dev")
         
-        # Initialize client if API key is available
-        self.client = None
-        if self.api_key:
-            try:
-                self.client = ComposioClient(api_key=self.api_key)
-                logging.info("Composio client initialized successfully")
-            except Exception as e:
-                logging.error(f"Error initializing Composio client: {str(e)}")
-                
-        # Store available tools
-        self.available_tools = {}
+        # Check for required credentials
+        self.is_configured = bool(self.api_key and self.connection_id)
         
-    async def initialize(self):
-        """Initialize the integration and load available tools"""
-        if not self.client:
-            return False
+        # Cache for connection status
+        self.connection_status = None
+        self.connection_last_checked = 0
+        
+        # Tools registry
+        self.registered_tools = {}
+        
+        if not self.is_configured:
+            log.warning("Composio credentials not found in environment variables. Some features will be disabled.")
+            log.info("Set COMPOSIO_API_KEY and COMPOSIO_CONNECTION_ID in .env file to enable Composio integration.")
+        
+    async def check_connection(self, force_refresh=False):
+        """Check if the connection to Composio is valid"""
+        # Use cached result if checked recently (within last 5 minutes)
+        current_time = time.time()
+        if not force_refresh and self.connection_status and current_time - self.connection_last_checked < 300:
+            return self.connection_status
+            
+        if not self.is_configured:
+            self.connection_status = {
+                "status": "unconfigured",
+                "message": "Composio credentials not configured"
+            }
+            return self.connection_status
             
         try:
-            # Get available integrations
-            self.available_tools = await self.get_available_tools()
-            return True
-        except Exception as e:
-            logging.error(f"Error initializing Composio integration: {str(e)}")
-            return False
-            
-    async def get_available_tools(self) -> Dict[str, Any]:
-        """Get all available tools from Composio"""
-        if not self.client:
-            return {}
-            
-        try:
-            # This would be replaced with the actual Composio API call when their SDK is available
-            # For now, we'll mock the response based on their documentation
-            tools = {
-                "github": {
-                    "actions": [
-                        "GITHUB_GET_CODE_CHANGES_IN_PR",
-                        "GITHUB_PULLS_CREATE_REVIEW_COMMENT",
-                        "GITHUB_ACTIVITY_STAR_REPO_FOR_AUTHENTICATED_USER"
-                    ]
-                },
-                "twitter": {
-                    "actions": [
-                        "TWITTER_POST_TWEET",
-                        "TWITTER_GET_USER_TIMELINE",
-                        "TWITTER_SEARCH_TWEETS"
-                    ]
-                },
-                "slackbot": {
-                    "actions": [
-                        "SLACKBOT_CHAT_POST_MESSAGE",
-                        "SLACKBOT_CHAT_UPDATE_MESSAGE"
-                    ]
-                }
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
             }
             
-            return tools
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{self.base_url}/v1/connections/{self.connection_id}",
+                    headers=headers
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        self.connection_status = {
+                            "status": "connected",
+                            "connection_details": result
+                        }
+                    else:
+                        error_text = await response.text()
+                        self.connection_status = {
+                            "status": "error",
+                            "message": f"API request failed with status {response.status}: {error_text}"
+                        }
         except Exception as e:
-            logging.error(f"Error fetching available tools: {str(e)}")
-            return {}
+            self.connection_status = {
+                "status": "error",
+                "message": f"Error connecting to Composio: {str(e)}"
+            }
             
-    async def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a Composio tool with the given parameters"""
-        if not self.client:
-            return {"error": "Composio client not initialized"}
-            
-        try:
-            # This would be the actual call to execute a tool via the Composio API
-            # For now, we'll mock a response based on their documentation
-            logging.info(f"Executing Composio tool: {tool_name} with parameters: {parameters}")
-            
-            # We'll simulate different responses based on the tool
-            if "GITHUB" in tool_name:
-                return {"success": True, "result": "GitHub action executed successfully"}
-            elif "TWITTER" in tool_name:
-                return {"success": True, "result": "Twitter action executed successfully"}
-            elif "SLACKBOT" in tool_name:
-                return {"success": True, "result": "Slackbot message sent successfully"}
-            else:
-                return {"error": f"Unknown tool: {tool_name}"}
-        except Exception as e:
-            logging.error(f"Error executing Composio tool {tool_name}: {str(e)}")
-            return {"error": str(e)}
-            
-    async def post_tweet(self, content: str) -> Dict[str, Any]:
-        """Post a tweet using Composio's Twitter integration"""
-        return await self.execute_tool("TWITTER_POST_TWEET", {"content": content})
+        self.connection_last_checked = current_time
+        return self.connection_status
         
-    async def star_github_repo(self, owner: str, repo: str) -> Dict[str, Any]:
-        """Star a GitHub repository using Composio's GitHub integration"""
-        return await self.execute_tool(
-            "GITHUB_ACTIVITY_STAR_REPO_FOR_AUTHENTICATED_USER", 
-            {"owner": owner, "repo": repo}
-        )
-        
-    async def send_slack_message(self, channel: str, message: str) -> Dict[str, Any]:
-        """Send a Slack message using Composio's SlackBot integration"""
-        return await self.execute_tool(
-            "SLACKBOT_CHAT_POST_MESSAGE",
-            {"channel": channel, "text": message}
-        )
-        
-    def register_trigger(self, trigger_name: str, callback_function):
-        """Register a callback for a Composio trigger event"""
-        if not self.client:
-            logging.error("Cannot register trigger: Composio client not initialized")
-            return False
-            
-        try:
-            # This would be the actual code to register a trigger callback
-            # For now, we'll just log the information
-            logging.info(f"Registered trigger {trigger_name} with callback function")
-            return True
-        except Exception as e:
-            logging.error(f"Error registering trigger {trigger_name}: {str(e)}")
-            return False
-            
-    def start_listening(self):
-        """Start listening for Composio trigger events"""
-        if not self.client:
-            logging.error("Cannot start listening: Composio client not initialized")
-            return False
-            
-        try:
-            # This would be the actual code to start listening for events
-            logging.info("Started listening for Composio trigger events")
-            return True
-        except Exception as e:
-            logging.error(f"Error starting Composio listener: {str(e)}")
-            return False
-            
-    def get_connection_status(self) -> Dict[str, Any]:
-        """Get status of current Composio connections"""
-        if not self.client:
-            return {"status": "Not connected", "error": "Composio client not initialized"}
-            
-        try:
-            # This would be the actual code to get connection status
+    async def register_mcp_tool(self, name, description, schema):
+        """Register a tool with Composio MCP"""
+        if not self.is_configured:
             return {
-                "status": "Connected",
-                "connection_id": self.connection_id,
-                "integration_id": self.integration_id,
-                "available_tools": len(self.available_tools)
+                "success": False,
+                "message": "Composio credentials not configured"
+            }
+            
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "name": name,
+                "description": description,
+                "schema": schema,
+                "connection_id": self.connection_id
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.base_url}/v1/tools",
+                    headers=headers,
+                    json=payload
+                ) as response:
+                    if response.status in (200, 201):
+                        result = await response.json()
+                        self.registered_tools[name] = result
+                        return {
+                            "success": True,
+                            "tool": result
+                        }
+                    else:
+                        error_text = await response.text()
+                        return {
+                            "success": False,
+                            "message": f"API request failed with status {response.status}: {error_text}"
+                        }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Error registering tool: {str(e)}"
+            }
+            
+    async def execute_tool(self, tool_name, inputs):
+        """Execute a tool using Composio"""
+        if not self.is_configured:
+            return {
+                "success": False,
+                "message": "Composio credentials not configured"
+            }
+            
+        if tool_name not in self.registered_tools:
+            return {
+                "success": False,
+                "message": f"Tool '{tool_name}' not registered"
+            }
+            
+        tool_id = self.registered_tools[tool_name].get("id")
+        if not tool_id:
+            return {
+                "success": False,
+                "message": f"Tool '{tool_name}' missing ID"
+            }
+            
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "inputs": inputs,
+                "connection_id": self.connection_id
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.base_url}/v1/tools/{tool_id}/execute",
+                    headers=headers,
+                    json=payload
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        return {
+                            "success": True,
+                            "result": result
+                        }
+                    else:
+                        error_text = await response.text()
+                        return {
+                            "success": False,
+                            "message": f"API request failed with status {response.status}: {error_text}"
+                        }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Error executing tool: {str(e)}"
+            }
+            
+    async def list_tools(self):
+        """List all registered tools"""
+        if not self.is_configured:
+            return {
+                "success": False,
+                "message": "Composio credentials not configured",
+                "tools": []
+            }
+            
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{self.base_url}/v1/tools?connection_id={self.connection_id}",
+                    headers=headers
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        # Update local registry
+                        for tool in result.get("tools", []):
+                            self.registered_tools[tool.get("name")] = tool
+                            
+                        return {
+                            "success": True,
+                            "tools": result.get("tools", [])
+                        }
+                    else:
+                        error_text = await response.text()
+                        return {
+                            "success": False,
+                            "message": f"API request failed with status {response.status}: {error_text}",
+                            "tools": []
+                        }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Error listing tools: {str(e)}",
+                "tools": []
+            }
+            
+    def install_cli(self, force=False):
+        """Install Composio CLI"""
+        try:
+            # Check if CLI is already installed
+            if not force:
+                result = subprocess.run(["composio", "--version"], capture_output=True, text=True)
+                if result.returncode == 0:
+                    log.info(f"Composio CLI already installed: {result.stdout.strip()}")
+                    return {
+                        "success": True,
+                        "message": f"Composio CLI already installed: {result.stdout.strip()}"
+                    }
+        except:
+            pass
+            
+        try:
+            # Install CLI
+            log.info("Installing Composio CLI...")
+            
+            # Use pip to install
+            result = subprocess.run(
+                ["pip", "install", "composio-cli"],
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode == 0:
+                log.info("Composio CLI installed successfully")
+                return {
+                    "success": True,
+                    "message": "Composio CLI installed successfully"
+                }
+            else:
+                log.error(f"Failed to install Composio CLI: {result.stderr}")
+                return {
+                    "success": False,
+                    "message": f"Failed to install Composio CLI: {result.stderr}"
+                }
+        except Exception as e:
+            log.error(f"Error installing Composio CLI: {str(e)}")
+            return {
+                "success": False,
+                "message": f"Error installing Composio CLI: {str(e)}"
+            }
+            
+    def configure_cli(self):
+        """Configure Composio CLI with API key"""
+        if not self.api_key:
+            return {
+                "success": False,
+                "message": "API key not configured"
+            }
+            
+        try:
+            # Configure CLI
+            log.info("Configuring Composio CLI...")
+            
+            # Write configuration file
+            config_dir = os.path.expanduser("~/.composio")
+            os.makedirs(config_dir, exist_ok=True)
+            
+            config = {
+                "api_key": self.api_key,
+                "api_url": self.base_url
+            }
+            
+            with open(os.path.join(config_dir, "config.json"), "w") as f:
+                json.dump(config, f)
+                
+            log.info("Composio CLI configured successfully")
+            return {
+                "success": True,
+                "message": "Composio CLI configured successfully"
             }
         except Exception as e:
-            logging.error(f"Error getting connection status: {str(e)}")
-            return {"status": "Error", "error": str(e)}
+            log.error(f"Error configuring Composio CLI: {str(e)}")
+            return {
+                "success": False,
+                "message": f"Error configuring Composio CLI: {str(e)}"
+            }
             
-async def test_composio():
-    """Test function for Composio integration"""
-    composio_integration = ComposioIntegration()
-    await composio_integration.initialize()
+    def run_cli_command(self, command):
+        """Run a Composio CLI command"""
+        try:
+            result = subprocess.run(
+                ["composio"] + command.split(),
+                capture_output=True,
+                text=True
+            )
+            
+            return {
+                "success": result.returncode == 0,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "code": result.returncode
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Error running CLI command: {str(e)}"
+            }
+            
+    def ensure_cli_ready(self):
+        """Ensure the CLI is installed and configured"""
+        install_result = self.install_cli()
+        
+        if not install_result["success"]:
+            return install_result
+            
+        return self.configure_cli()
+
+# Initialize global client
+composio_client = ComposioClient()
+
+async def test_connection():
+    """Test connection to Composio API"""
+    status = await composio_client.check_connection(force_refresh=True)
+    print(f"Composio connection status: {json.dumps(status, indent=2)}")
     
-    # Print available tools
-    print("Available tools:", composio_integration.available_tools)
+    # List tools
+    tools = await composio_client.list_tools()
+    print(f"Composio tools: {json.dumps(tools, indent=2)}")
     
-    # Test twitter integration
-    tweet_result = await composio_integration.post_tweet("Testing OrganiX Composio integration!")
-    print("Tweet result:", tweet_result)
-    
-    # Test GitHub integration
-    star_result = await composio_integration.star_github_repo("kabrony", "claude-agent-mcp")
-    print("Star result:", star_result)
-    
-    # Test Slack integration
-    slack_result = await composio_integration.send_slack_message("general", "Hello from OrganiX!")
-    print("Slack result:", slack_result)
-    
+    return status
+
 if __name__ == "__main__":
-    # Run test function
-    asyncio.run(test_composio())
+    # Test connection when run directly
+    asyncio.run(test_connection())
