@@ -138,3 +138,49 @@ mcp.register_tool(
 ```
 
 The tool will then be automatically available for use in conversations and queries.
+
+## Composio Integration
+
+OrganiX features deep integration with Composio, a platform that extends MCP with additional capabilities:
+
+### Synchronization
+
+The MCP Manager automatically synchronizes with Composio to:
+
+1. Register local tools with the Composio platform
+2. Import tools from Composio to the local environment
+3. Maintain consistent tool definitions across environments
+
+```python
+# Sync tools with Composio
+await mcp.refresh_composio_tools()
+```
+
+### Composio CLI
+
+The integration includes support for the Composio CLI, allowing command-line operations:
+
+```bash
+# Install Composio CLI
+composio_client.install_cli()
+
+# Configure CLI with credentials
+composio_client.configure_cli()
+
+# Run CLI commands
+result = composio_client.run_cli_command("list tools")
+```
+
+### Connection Management
+
+OrganiX manages Composio connections with secure credential handling:
+
+```python
+# Check connection status
+status = await composio_client.check_connection()
+
+# Connection ID management
+connection_id = os.getenv("COMPOSIO_CONNECTION_ID")
+```
+
+Integration keys are stored securely in the environment variables, never hardcoded in the application.
