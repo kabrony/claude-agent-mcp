@@ -177,3 +177,60 @@ status = await composio_client.check_connection()
 ## Multi-Agent Coordination
 
 OrganiX implements a sophisticated multi-agent coordination system that leverages MCP for tool access and integration.
+
+### Agent Specialization
+
+The system includes several specialized agents, each with unique capabilities:
+
+- **Researcher**: Focused on information retrieval and synthesis
+- **Coder**: Specialized in code generation and analysis
+- **Blockchain Specialist**: Expert in blockchain technologies and operations
+- **MCP Specialist**: Focused on tool integration and management
+- **AGI Specialist**: Handles complex, multi-domain reasoning tasks
+
+### Intent-Based Routing
+
+Queries are automatically routed to the most appropriate agent based on detected intent:
+
+```python
+# Route query to the best agent
+result = await coordinator.route_to_best_agent(query)
+
+# Get agent information
+agent_id = result.get("agent_id")
+agent_name = result.get("agent_name")
+```
+
+### Collaborative Problem Solving
+
+For complex problems, multiple agents can collaborate:
+
+```python
+# Process with multiple agents
+result = await coordinator.multi_agent_collaboration(
+    query,
+    agent_ids=["researcher", "coder", "blockchain"]
+)
+
+# The result includes information about all contributing agents
+contributing_agents = result.get("contributing_agents")
+```
+
+### Context Awareness
+
+Agents maintain context across interactions using the memory system:
+
+```python
+# Process with context awareness
+result = await coordinator.process_with_context_awareness(query)
+
+# This automatically incorporates relevant past interactions
+```
+
+### Tool Access
+
+All agents have access to the full range of MCP tools, but specific agents may have specialized knowledge about certain tools:
+
+- The **Blockchain Specialist** has deep knowledge of blockchain tools
+- The **MCP Specialist** is expert in tool selection and usage
+- The **Researcher** excels at using web search and information retrieval tools
