@@ -164,3 +164,72 @@ mcp.register_tool(
 
 # Now the language model can use this tool when needed
 ```
+
+## Composio Integration
+
+OrganiX features deep integration with Composio, a platform that extends MCP with additional capabilities:
+
+### Synchronization
+
+The MCP Manager automatically synchronizes with Composio to:
+
+1. Register local tools with the Composio platform
+2. Import tools from Composio to the local environment
+3. Maintain consistent tool definitions across environments
+
+```python
+# Sync tools with Composio
+await mcp.refresh_composio_tools()
+```
+
+### Composio Client
+
+The Composio client provides a direct interface to the Composio API:
+
+```python
+from composio_integration import composio_client
+
+# Check connection status
+connection_status = await composio_client.check_connection()
+print(f"Composio connection: {connection_status['status']}")
+
+# List registered tools
+tools = await composio_client.list_tools()
+for tool in tools.get("tools", []):
+    print(f"- {tool['name']}: {tool['description']}")
+```
+
+### Tool Execution Flow
+
+When a tool is executed through Composio:
+
+1. OrganiX identifies tool need from natural language
+2. MCP Manager routes to Composio client for external tools
+3. Composio executes the tool and returns results
+4. MCP Manager formats results for Claude to consume
+5. Claude incorporates tool output into its response
+
+### Configuration
+
+To enable Composio integration, add the following to your `.env` file:
+
+```
+COMPOSIO_API_KEY=your_composio_api_key
+COMPOSIO_CONNECTION_ID=your_connection_id
+COMPOSIO_INTEGRATION_ID=your_integration_id
+COMPOSIO_BASE_URL=https://api.composio.dev
+```
+
+### Composio CLI Integration
+
+The system includes Composio CLI support for command-line operations:
+
+```python
+# Install and configure CLI
+composio_client.install_cli()
+composio_client.configure_cli()
+
+# Execute CLI commands
+result = composio_client.run_cli_command("list connections")
+print(result["stdout"])
+```
