@@ -84,3 +84,118 @@ mcp.register_tool(
 result = await mcp.process_with_tools("What's the average of 10, 20, and 30?")
 print(result)  # The MCP will identify the tool need and execute it
 ```
+
+### Tool Registration
+
+Tools in OrganiX MCP follow a standard format:
+
+- **Name**: Unique identifier for the tool
+- **Description**: Human-readable description of the tool's functionality
+- **Function**: The actual implementation that executes when the tool is called
+- **Metadata**: Optional additional information about the tool
+
+Each tool can have optional input validation, error handling, and usage tracking.
+
+## Tool Integration
+
+OrganiX comes with several built-in tools:
+
+### System Tools
+- `list_files` - List files in a directory
+- `execute_command` - Execute system commands (with security restrictions)
+
+### Web Research Tools
+- `web_search` - Search the web for information
+- `extract_url` - Extract content from a specific URL
+
+### Memory Tools
+- `retrieve_memory` - Retrieve relevant memories
+- `retrieve_memory_by_timeframe` - Get memories from a specific time period
+- `summarize_memories` - Generate summaries of recent memories
+
+### Blockchain Tools
+- `get_solana_balance` - Get SOL balance for an address
+- `get_token_accounts` - Get token accounts for an address
+- `get_nfts` - Get NFTs owned by an address
+
+### Advanced Tools
+- `create_zk_proof` - Create zero-knowledge proofs
+- `verify_zk_proof` - Verify zero-knowledge proofs
+
+## Composio Integration
+
+OrganiX features deep integration with Composio, a platform that extends MCP with additional capabilities:
+
+### Synchronization
+
+The MCP Manager automatically synchronizes with Composio to:
+
+1. Register local tools with the Composio platform
+2. Import tools from Composio to the local environment
+3. Maintain consistent tool definitions across environments
+
+```python
+# Sync tools with Composio
+await mcp.refresh_composio_tools()
+```
+
+### Composio CLI
+
+The integration includes support for the Composio CLI, allowing command-line operations:
+
+```bash
+# Install Composio CLI
+composio_client.install_cli()
+
+# Configure CLI with credentials
+composio_client.configure_cli()
+
+# Run CLI commands
+result = composio_client.run_cli_command("list tools")
+```
+
+## Multi-Agent Coordination
+
+OrganiX implements a sophisticated multi-agent system that leverages MCP for coordination:
+
+### Agent Types
+
+The system includes several specialized agents:
+
+- **Research Specialist**: Deep research and information synthesis
+- **Code Specialist**: High-quality code generation and analysis
+- **Blockchain Specialist**: Blockchain expertise and integration
+- **MCP Specialist**: Tool management and protocol expertise
+- **AGI Specialist**: Advanced reasoning and cross-domain problem solving
+
+### Routing and Coordination
+
+The `MultiAgentCoordinator` handles:
+
+1. **Intent Detection**: Analyzing user queries to determine the most appropriate agent
+2. **Agent Routing**: Directing queries to specialized agents based on intent
+3. **Collaborative Processing**: Combining insights from multiple agents
+4. **Synthesis**: Merging responses into coherent, comprehensive answers
+
+```python
+# Example of multi-agent coordination
+from advanced_chat import coordinator
+
+# Route to best agent automatically
+result = await coordinator.route_to_best_agent("How can I create a Solana dApp?")
+
+# Use multiple agents in collaboration
+result = await coordinator.multi_agent_collaboration(
+    "Design a system that uses blockchain for identity verification with ZK proofs"
+)
+```
+
+### Agent Communication
+
+Agents communicate through a standardized message format that includes:
+
+- The original query
+- Context from memory and previous interactions
+- Tool usage results
+- Confidence scores
+- Reasoning steps
