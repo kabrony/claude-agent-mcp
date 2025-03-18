@@ -127,6 +127,14 @@ class MultiAgentCoordinator:
         self.blockchain_available = BLOCKCHAIN_AVAILABLE
         self.composio_available = COMPOSIO_AVAILABLE
         
+        # Agent coordination stats
+        self.coordination_stats = {
+            "total_requests": 0,
+            "agent_usage": {},
+            "intent_distribution": {},
+            "avg_response_time": 0
+        }
+        
     def create_default_agents(self):
         """Create default specialized agents"""
         # Research agent
@@ -169,39 +177,37 @@ When discussing blockchain topics, prioritize technical accuracy and security.""
                 )
             )
             
-        # MCP agent for Model-Context Protocol
+        # MCP Integration Specialist
         self.register_agent(
-            "mcp",
+            "mcp_specialist",
             ChatPersona(
-                name="MCP Specialist",
-                description="Specialized in Model Context Protocol and tool usage",
-                system_prompt="""You are an MCP Specialist agent within OrganiX.
-Your primary role is to manage tool usage through the Model Context Protocol.
-You can help select the right tools for tasks, synchronize tools with Composio,
-and facilitate communication between models and external systems.
-When using tools, prioritize clear input/output handling and error management."""
+                name="MCP Integration Specialist",
+                description="Specialized in Model Context Protocol for tool integration",
+                system_prompt="""You are an MCP Integration Specialist agent within OrganiX.
+Your primary role is to help users effectively utilize tools through the Model Context Protocol.
+You understand how to integrate various tools and APIs into conversational AI.
+Provide detailed guidance on MCP implementation, best practices, and advanced usage patterns."""
             )
         )
         
-        # AGI-aware agent
+        # AGI Reasoning Agent
         self.register_agent(
-            "agi",
+            "agi_reasoner",
             ChatPersona(
-                name="AGI Specialist",
-                description="Specialized in advanced reasoning and multi-domain problem solving",
-                system_prompt="""You are an AGI Specialist agent within OrganiX.
-Your primary role is to tackle complex, multi-domain problems that require
-integrated reasoning across different fields of knowledge. You excel at
-decomposing complex problems, exploring multiple solution pathways,
-and combining insights from different disciplines.
-When solving problems, prioritize creative thinking, systematic reasoning,
-and clear explanation of your thought process."""
+                name="AGI Reasoning Specialist",
+                description="Specialized in complex reasoning and advanced cognition",
+                system_prompt="""You are an AGI Reasoning Specialist within OrganiX.
+Your primary role is to tackle complex problems requiring advanced reasoning capabilities.
+You excel at breaking down complicated scenarios into manageable components.
+Use chain-of-thought reasoning, analogical thinking, and first-principles analysis in your responses.
+When addressing complex topics, show your reasoning process explicitly and consider multiple perspectives."""
             )
         )
         
     def register_agent(self, agent_id, persona):
         """Register a new specialized agent"""
         self.agents[agent_id] = persona
+        self.coordination_stats["agent_usage"][agent_id] = 0
         log.info(f"Registered agent: {persona.name} with ID {agent_id}")
         
     async def route_to_best_agent(self, query):
@@ -210,26 +216,44 @@ and clear explanation of your thought process."""
         intent = ChatIntent(query)
         log.info(f"Detected intent: {intent.primary_intent} (confidence: {intent.confidence:.2f})")
         
+        # Update stats
+        self.coordination_stats["total_requests"] += 1
+        if intent.primary_intent in self.coordination_stats["intent_distribution"]:
+            self.coordination_stats["intent_distribution"][intent.primary_intent] += 1
+        else:
+            self.coordination_stats["intent_distribution"][intent.primary_intent] = 1
+        
+        start_time = time.time()
+        
         # Route based on intent
+        result = None
         if intent.primary_intent == "blockchain" and "blockchain" in self.agents:
-            return await self.process_with_agent("blockchain", query)
+            result = await self.process_with_agent("blockchain", query)
         elif intent.primary_intent == "web_search" and "researcher" in self.agents:
-            return await self.process_with_agent("researcher", query)
+            result = await self.process_with_agent("researcher", query)
         elif intent.primary_intent in ["command", "agent_action"] and "coder" in self.agents:
-            return await self.process_with_agent("coder", query)
-            
-        # Check for MCP and AGI specific keywords
-        if re.search(r'\b(?:mcp|model context protocol|tool|tools|composio)\b', query, re.IGNORECASE) and "mcp" in self.agents:
-            return await self.process_with_agent("mcp", query)
-        elif re.search(r'\b(?:agi|artificial general intelligence|multi-domain|reasoning|cognitive|think|complex problem)\b', query, re.IGNORECASE) and "agi" in self.agents:
-            return await self.process_with_agent("agi", query)
+            result = await self.process_with_agent("coder", query)
+        elif "mcp" in query.lower() and "mcp_specialist" in self.agents:
+            result = await self.process_with_agent("mcp_specialist", query)
+        elif any(term in query.lower() for term in ["complex", "reasoning", "agi", "cognitive", "think", "analyze"]) and "agi_reasoner" in self.agents:
+            result = await self.process_with_agent("agi_reasoner", query)
         
         # Default to researcher for questions or no clear intent
-        if "researcher" in self.agents:
-            return await self.process_with_agent("researcher", query)
+        if result is None:
+            if "researcher" in self.agents:
+                result = await self.process_with_agent("researcher", query)
+            else:
+                # Fallback to general processing
+                result = await self.process_query(query)
         
-        # Fallback to general processing
-        return await self.process_query(query)
+        # Update response time stats
+        elapsed_time = time.time() - start_time
+        response_times = self.coordination_stats.get("response_times", [])
+        response_times.append(elapsed_time)
+        self.coordination_stats["response_times"] = response_times
+        self.coordination_stats["avg_response_time"] = sum(response_times) / len(response_times)
+        
+        return result
     
     async def process_with_agent(self, agent_id, query):
         """Process a query with a specific agent"""
@@ -241,6 +265,9 @@ and clear explanation of your thought process."""
             }
         
         persona = self.agents[agent_id]
+        
+        # Update stats
+        self.coordination_stats["agent_usage"][agent_id] += 1
         
         # Add agent information to memory
         memory_id = self.memory.add_memory(
@@ -423,6 +450,7 @@ When responding, prioritize accuracy, clarity, and helpfulness."""
         if data_type == "knowledge":
             return await zk_proofs.create_proof_of_knowledge(data)
         elif data_type == "ownership":
+            # For ownership proofs, data should be a dict with address and asset_id
             if isinstance(data, dict) and "address" in data and "asset_id" in data:
                 return await zk_proofs.create_proof_of_ownership(data["address"], data["asset_id"])
             else:
@@ -433,9 +461,9 @@ When responding, prioritize accuracy, clarity, and helpfulness."""
         else:
             return {
                 "success": False,
-                "message": f"Unsupported proof type: {data_type}"
+                "message": f"Unknown proof type: {data_type}"
             }
-            
+    
     async def verify_zero_knowledge_proof(self, proof, public_input=None):
         """Verify a zero-knowledge proof"""
         if not self.blockchain_available:
@@ -446,209 +474,229 @@ When responding, prioritize accuracy, clarity, and helpfulness."""
             
         return zk_proofs.verify_proof(proof, public_input)
     
-    async def multi_agent_collaboration(self, query, agent_ids=None):
-        """Process a query using multiple agents in collaboration"""
-        # Use default set of agents if not specified
-        if not agent_ids:
-            agent_ids = ["researcher", "coder", "agi"]
-            
-            # Add blockchain if available
-            if self.blockchain_available and "blockchain" in self.agents:
-                agent_ids.append("blockchain")
-                
-            # Add MCP if available
-            if self.composio_available and "mcp" in self.agents:
-                agent_ids.append("mcp")
+    def get_coordination_stats(self):
+        """Get statistics about agent coordination"""
+        return self.coordination_stats
+    
+    async def collaborative_reasoning(self, query, agents=None):
+        """Use multiple agents collaboratively for complex reasoning"""
+        if not agents:
+            # Default to using all available agents for collaborative reasoning
+            agents = list(self.agents.keys())
         
-        # Filter to only include available agents
-        agent_ids = [agent_id for agent_id in agent_ids if agent_id in self.agents]
+        # Store query in memory
+        memory_id = self.memory.add_memory(
+            "episodic",
+            query,
+            {"type": "collaborative_query"},
+            importance=4
+        )
         
-        if not agent_ids:
-            return await self.process_query(query)
-            
-        # Create tasks to process with each agent in parallel
-        tasks = []
-        for agent_id in agent_ids:
-            tasks.append(asyncio.create_task(self.process_with_agent(agent_id, query)))
-            
+        # Get responses from each agent in parallel
+        agent_tasks = {}
+        for agent_id in agents:
+            if agent_id in self.agents:
+                # Create a task for each agent
+                task = asyncio.create_task(self.process_with_agent(agent_id, query))
+                agent_tasks[agent_id] = task
+        
         # Wait for all agents to complete
-        results = await asyncio.gather(*tasks)
-        
-        # Extract responses
         agent_responses = {}
-        for result in results:
-            if result.get("success"):
-                agent_id = result.get("agent_id")
-                agent_name = result.get("agent_name")
-                agent_responses[agent_id] = {
-                    "name": agent_name,
-                    "response": result.get("response")
-                }
+        for agent_id, task in agent_tasks.items():
+            result = await task
+            agent_responses[agent_id] = result
         
-        # Combine responses using a meta-agent (AGI if available, otherwise general)
-        meta_agent_id = "agi" if "agi" in self.agents else None
-        
-        if not meta_agent_id:
-            # Just return the most relevant response based on agent priority
-            priority_order = ["agi", "researcher", "blockchain", "coder", "mcp"]
-            for agent_id in priority_order:
-                if agent_id in agent_responses:
-                    return {
-                        "success": True,
-                        "agent_id": agent_id,
-                        "agent_name": agent_responses[agent_id]["name"],
-                        "response": agent_responses[agent_id]["response"],
-                        "collaboration": True,
-                        "contributing_agents": list(agent_responses.keys())
-                    }
-            
-            # Fallback to first available
-            first_agent_id = list(agent_responses.keys())[0]
-            return {
-                "success": True,
-                "agent_id": first_agent_id,
-                "agent_name": agent_responses[first_agent_id]["name"],
-                "response": agent_responses[first_agent_id]["response"],
-                "collaboration": True,
-                "contributing_agents": list(agent_responses.keys())
-            }
-        
-        # Use the AGI agent to synthesize a response
-        synthesis_prompt = f"""User query: {query}
+        # Create a summary prompt combining all perspectives
+        synthesis_prompt = f"""Original query: {query}
 
-Multiple agents have provided responses to this query. Your task is to synthesize these responses into a coherent, comprehensive answer.
-
-Available agent responses:
+I have received perspectives from multiple specialized agents. Please synthesize these perspectives into a comprehensive response.
 
 """
+        for agent_id, result in agent_responses.items():
+            if result.get("success", False):
+                agent_name = result.get("agent_name", agent_id)
+                response = result.get("response", "No response")
+                synthesis_prompt += f"\n{agent_name}'s perspective:\n{response[:500]}...\n"
         
-        for agent_id, info in agent_responses.items():
-            synthesis_prompt += f"## {info['name']} (Agent ID: {agent_id})\n\n{info['response']}\n\n---\n\n"
-            
-        synthesis_prompt += "\nSynthesize these responses into a single, coherent answer that addresses the user's query comprehensively."
+        synthesis_prompt += "\nPlease create a unified response that incorporates the insights from all specialists and resolves any contradictions."
         
-        synthesis_result = await self.process_with_agent(meta_agent_id, synthesis_prompt)
-        
-        if synthesis_result.get("success"):
-            return {
-                "success": True,
-                "agent_id": meta_agent_id,
-                "agent_name": synthesis_result.get("agent_name"),
-                "response": synthesis_result.get("response"),
-                "collaboration": True,
-                "contributing_agents": list(agent_responses.keys())
-            }
+        # Get the agi_reasoner to synthesize if available, otherwise use general processing
+        if "agi_reasoner" in self.agents:
+            synthesis = await self.process_with_agent("agi_reasoner", synthesis_prompt)
         else:
-            # Fallback to researcher or first available
-            fallback_id = "researcher" if "researcher" in agent_responses else list(agent_responses.keys())[0]
+            synthesis = await self.process_query(synthesis_prompt)
+        
+        # Store the collaborative result
+        self.memory.add_memory(
+            "episodic",
+            synthesis.get("response", "Synthesis failed"),
+            {
+                "type": "collaborative_response",
+                "query_memory_id": memory_id,
+                "participating_agents": list(agent_responses.keys())
+            },
+            importance=4
+        )
+        
+        return {
+            "success": synthesis.get("success", False),
+            "response": synthesis.get("response", "Collaborative reasoning failed"),
+            "agent_responses": agent_responses
+        }
+    
+    async def process_with_mcp_tools(self, query, tool_names=None):
+        """Process a query using specific MCP tools"""
+        if not self.composio_available:
+            return {
+                "success": False,
+                "message": "Composio integration not available",
+                "response": "I cannot access MCP tools at the moment. Let me try to help you directly."
+            }
+        
+        # Use MCP specialist if available
+        if "mcp_specialist" in self.agents:
+            system_prompt = self.agents["mcp_specialist"].system_prompt
+        else:
+            system_prompt = """You are OrganiX, an advanced AI assistant that can use Model Context Protocol tools.
+When using tools, clearly indicate which tool you're using and why.
+Provide thoughtful, helpful responses based on the tool outputs."""
+        
+        # Store query in memory
+        memory_id = self.memory.add_memory(
+            "episodic",
+            query,
+            {
+                "type": "mcp_query",
+                "tools": tool_names
+            },
+            importance=3
+        )
+        
+        try:
+            # Get available tools
+            tools_result = await composio_client.list_tools()
+            available_tools = {t["name"]: t for t in tools_result.get("tools", [])}
+            
+            # Filter to requested tools if specified
+            if tool_names:
+                tools = {k: v for k, v in available_tools.items() if k in tool_names}
+            else:
+                tools = available_tools
+            
+            # If no tools available, fall back to regular processing
+            if not tools:
+                return await self.process_query(
+                    query, 
+                    system_prompt=f"{system_prompt}\nNote: No MCP tools are available for this request."
+                )
+            
+            # Execute query with tools
+            tool_descriptions = "\n".join([f"- {name}: {tool.get('description', 'No description')}" for name, tool in tools.items()])
+            enhanced_system_prompt = f"{system_prompt}\n\nAvailable tools:\n{tool_descriptions}"
+            
+            # Use the MCP client to process with tools
+            results = await composio_client.process_with_tools(query)
+            
+            # Process results with Claude for a coherent response
+            result_prompt = f"""Original query: {query}
+
+Tool results:
+{json.dumps(results, indent=2)}
+
+Please analyze these results and provide a helpful, coherent response to the original query."""
+            
+            response = await self.claude_client.send_message(
+                result_prompt,
+                system=enhanced_system_prompt,
+                max_tokens=4096
+            )
+            
+            # Store response in memory
+            self.memory.add_memory(
+                "episodic",
+                response,
+                {
+                    "type": "mcp_response",
+                    "query_memory_id": memory_id,
+                    "tools_used": list(tools.keys())
+                },
+                importance=3
+            )
+            
             return {
                 "success": True,
-                "agent_id": fallback_id,
-                "agent_name": agent_responses[fallback_id]["name"],
-                "response": agent_responses[fallback_id]["response"],
-                "collaboration": True,
-                "contributing_agents": list(agent_responses.keys())
+                "response": response,
+                "tool_results": results
             }
-            
-    async def explain_multi_agent_system(self):
-        """Generate an explanation of the multi-agent system"""
-        info = {
-            "agents": {},
-            "integrations": {
-                "blockchain": self.blockchain_available,
-                "composio": self.composio_available
+        except Exception as e:
+            log.error(f"Error processing with MCP tools: {str(e)}")
+            return {
+                "success": False,
+                "message": f"Error processing with MCP tools: {str(e)}",
+                "response": "I encountered an error while using tools to process your request. Please try again."
+            }
+    
+    def get_agi_capabilities_info(self):
+        """Get information about AGI capabilities"""
+        capabilities = {
+            "multi_agent_coordination": {
+                "description": "Coordinates multiple specialized agents for optimal response generation",
+                "agent_count": len(self.agents),
+                "available_agents": list(self.agents.keys())
             },
-            "capabilities": [
-                "Multi-agent routing and coordination",
-                "Context-aware processing",
-                "Memory integration with importance ratings",
-                "Real-time blockchain data access (if enabled)",
-                "Zero-knowledge proof creation and verification (if enabled)",
-                "Tool usage through Model Context Protocol",
-                "Intent detection and analysis"
-            ]
+            "context_awareness": {
+                "description": "Maintains context across conversation turns using memory system",
+                "memory_types": ["episodic", "semantic", "procedural"],
+                "context_window": "Unlimited through memory retrieval"
+            },
+            "collaborative_reasoning": {
+                "description": "Multiple agents collaborate on complex reasoning tasks",
+                "synthesis": "AGI reasoner synthesizes perspectives"
+            },
+            "blockchain_integration": {
+                "available": self.blockchain_available,
+                "features": ["Solana account data", "NFT ownership", "Phantom wallet integration", "ZK proofs"]
+            },
+            "mcp_integration": {
+                "available": self.composio_available,
+                "description": "Model Context Protocol for tool integration"
+            }
         }
         
-        # Add agent information
-        for agent_id, persona in self.agents.items():
-            info["agents"][agent_id] = {
-                "name": persona.name,
-                "description": persona.description
-            }
-            
-        explanation = f"""# OrganiX Multi-Agent System
+        return capabilities
 
-OrganiX implements an advanced multi-agent coordination system that routes queries to specialized agents based on detected intent.
-
-## Available Agents
-
-Currently, the system has {len(self.agents)} specialized agents:
-
-"""
-
-        for agent_id, persona in self.agents.items():
-            explanation += f"- **{persona.name}** ({agent_id}): {persona.description}\n"
-            
-        explanation += f"""
-## Integrations
-
-- **Blockchain Integration**: {'Enabled' if self.blockchain_available else 'Disabled'}
-- **Composio/MCP Integration**: {'Enabled' if self.composio_available else 'Disabled'}
-
-## Key Capabilities
-
-- **Intent Detection**: Analyzes user queries to determine the most appropriate agent
-- **Context Awareness**: Incorporates relevant memories and context into processing
-- **Multi-Agent Collaboration**: Can combine insights from multiple specialized agents
-- **Memory Management**: Stores interactions with importance ratings for future retrieval
-- **Tool Usage**: Leverages the Model Context Protocol for external tool integration
-- **ZK Proofs**: {'Supports' if self.blockchain_available else 'Does not support'} zero-knowledge proof creation and verification
-
-## How It Works
-
-1. When you submit a query, the system analyzes it for intent
-2. Based on the detected intent, your query is routed to the most appropriate agent
-3. For complex queries, multiple agents can collaborate to generate a comprehensive response
-4. All interactions are stored in the memory system for future context
-
-For optimal results, clearly state your need or question, and the system will automatically route to the best specialized agent.
-"""
-            
-        return {
-            "success": True,
-            "explanation": explanation,
-            "system_info": info
-        }
-            
-# Initialize global coordinator
+# Initialize coordinator for use
 coordinator = MultiAgentCoordinator()
 
-async def test_multi_agent():
-    """Test the multi-agent coordination system"""
-    test_queries = [
-        "How does the Solana blockchain work?",
-        "Write a Python function to calculate Fibonacci numbers",
-        "What are the latest developments in artificial intelligence?",
-        "How can I integrate MCP into my application?",
-        "What's the difference between AGI and narrow AI?"
-    ]
+async def test_coordinator():
+    """Test the multi-agent coordinator"""
+    print("Testing multi-agent coordinator...")
     
-    for query in test_queries:
-        print(f"\n\nTesting query: {query}")
-        response = await coordinator.route_to_best_agent(query)
-        print(f"Routed to agent: {response.get('agent_name', 'Unknown')}")
-        print(f"Response (snippet): {response.get('response', '')[:150]}...")
-        
-    # Test collaborative response
-    print("\n\nTesting multi-agent collaboration...")
-    collab_query = "Create a Python application that connects to the Solana blockchain and uses MCP for tool integration"
-    result = await coordinator.multi_agent_collaboration(collab_query)
-    print(f"Collaboration result - Synthesized by: {result.get('agent_name', 'Unknown')}")
-    print(f"Contributing agents: {result.get('contributing_agents', [])}")
-    print(f"Response (snippet): {result.get('response', '')[:150]}...")
+    # Test basic query
+    query = "What are the latest advancements in artificial intelligence?"
+    print(f"Testing query: {query}")
     
-    return "Tests completed"
+    result = await coordinator.route_to_best_agent(query)
+    print(f"Response from agent: {result.get('agent_name', 'Unknown')}")
+    print(f"Response snippet: {result.get('response', 'No response')[:100]}...")
+    
+    # Test collaborative reasoning
+    collab_query = "Compare and contrast traditional finance with DeFi on Solana"
+    print(f"Testing collaborative reasoning: {collab_query}")
+    
+    collab_result = await coordinator.collaborative_reasoning(collab_query)
+    print(f"Collaborative response snippet: {collab_result.get('response', 'No response')[:100]}...")
+    
+    # Print stats
+    print("Coordination stats:")
+    print(json.dumps(coordinator.get_coordination_stats(), indent=2))
+    
+    return {
+        "basic_query": result,
+        "collaborative_reasoning": collab_result,
+        "stats": coordinator.get_coordination_stats()
+    }
 
 if __name__ == "__main__":
-    # Run test
-    asyncio.run(test_multi_agent())
+    # Test the coordinator when run directly
+    asyncio.run(test_coordinator())
