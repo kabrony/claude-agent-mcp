@@ -233,3 +233,66 @@ composio_client.configure_cli()
 result = composio_client.run_cli_command("list connections")
 print(result["stdout"])
 ```
+
+## Multi-Agent Coordination
+
+OrganiX implements a sophisticated multi-agent architecture that works alongside MCP to provide specialized capabilities:
+
+### Agent Types
+
+The system includes several specialized agents:
+
+- **Research Specialist**: Focuses on information retrieval and synthesis
+- **Code Specialist**: Handles code generation and analysis
+- **Blockchain Specialist**: Manages blockchain interactions and data
+- **MCP Specialist**: Optimizes tool selection and usage
+- **AGI Specialist**: Handles complex reasoning across multiple domains
+
+### Agent Coordination
+
+The `MultiAgentCoordinator` handles routing queries to the most appropriate agent:
+
+```python
+from advanced_chat import MultiAgentCoordinator
+
+# Initialize coordinator
+coordinator = MultiAgentCoordinator()
+
+# Process query with automatic routing
+result = await coordinator.route_to_best_agent("How does the Solana blockchain work?")
+
+# Process with a specific agent
+result = await coordinator.process_with_agent("blockchain", "How do I connect my Phantom wallet?")
+
+# Use multiple agents in collaboration
+result = await coordinator.multi_agent_collaboration(
+    "Create a Python app that connects to Solana and uses MCP",
+    agent_ids=["coder", "blockchain", "mcp"]
+)
+```
+
+### Intent Detection
+
+The system analyzes queries to detect intent and route to the appropriate agent:
+
+```python
+from advanced_chat import ChatIntent
+
+# Analyze intent
+intent = ChatIntent("How do I connect my Phantom wallet to my Solana app?")
+print(f"Primary intent: {intent.primary_intent}")
+print(f"Confidence: {intent.confidence}")
+print(f"Detected intents: {intent.detected_intents}")
+```
+
+### Context Awareness
+
+Agents maintain context through the memory system:
+
+```python
+# Process with context awareness
+result = await coordinator.process_with_context_awareness(
+    "Tell me more about it",
+    context="Previously discussed Solana blockchain fundamentals and token economics."
+)
+```
