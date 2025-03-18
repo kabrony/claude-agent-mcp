@@ -156,183 +156,231 @@ result = composio_client.run_cli_command("list tools")
 
 ## Multi-Agent Coordination
 
-OrganiX implements a sophisticated multi-agent coordination system that leverages MCP for tool access across specialized agents:
+OrganiX implements a sophisticated multi-agent architecture that leverages MCP for coordination:
 
-### Agent Types
+### Specialized Agents
 
 The system includes several specialized agents:
 
-- **Researcher Agent**: Focuses on information retrieval and synthesis
-- **Coder Agent**: Specializes in code generation and analysis
-- **Blockchain Agent**: Handles blockchain interactions and data
-- **MCP Specialist**: Manages tool selection and usage
-- **AGI Specialist**: Tackles complex, multi-domain problems
+- **Research Specialist**: Focused on information gathering and synthesis
+- **Code Specialist**: Expert in generating and explaining code
+- **Blockchain Specialist**: Handles blockchain interactions and explanations
+- **MCP Specialist**: Manages tools and integrations
+- **AGI Specialist**: Tackles complex, cross-domain problems
 
-### Coordination Flow
+### Routing and Coordination
 
-1. User queries are analyzed for intent
-2. The appropriate specialized agent is selected
-3. The agent leverages MCP tools as needed
-4. Results are processed and returned to the user
+The `MultiAgentCoordinator` class handles:
 
-For complex queries, multiple agents can collaborate:
+1. **Intent Detection**: Analyzes queries to determine the most appropriate agent
+2. **Agent Routing**: Directs queries to specialized agents
+3. **Collaborative Processing**: Enables multiple agents to work together
+4. **Response Synthesis**: Combines insights from different agents
 
 ```python
-# Multi-agent collaboration
+# Example: Multi-agent processing
+from advanced_chat import coordinator
+
 result = await coordinator.multi_agent_collaboration(
-    "Create a Python app that analyzes Solana NFTs with zero-knowledge proofs"
+    "Create a Solana application that uses ZK proofs for privacy"
 )
 ```
 
 ## Advanced Capabilities
 
-### Intent Detection
+### Zero-Knowledge Integration
 
-The system automatically detects user intent to route queries appropriately:
+OrganiX incorporates zero-knowledge proof technology, enabling:
 
-```python
-intent = ChatIntent("What's the current price of Solana?")
-print(intent.primary_intent)  # "blockchain"
-print(intent.confidence)      # 0.75
-```
-
-### Context Awareness
-
-All tools have access to relevant context from the memory system:
+- **Privacy-Preserving Verification**: Prove facts without revealing sensitive information
+- **Ownership Verification**: Demonstrate ownership of assets without exposing private keys
+- **Selective Disclosure**: Control what information is shared
 
 ```python
-result = await coordinator.process_with_context_awareness(
-    "Tell me more about that blockchain project we discussed"
+# Create a zero-knowledge proof
+proof = await coordinator.create_zero_knowledge_proof(
+    "knowledge", 
+    {"secret_value": 42}
 )
+
+# Verify the proof
+verification = await coordinator.verify_zero_knowledge_proof(proof)
 ```
 
-### Tool Usage Analytics
+### Blockchain Capabilities
 
-The MCP Manager tracks detailed analytics about tool usage:
+The Solana integration provides:
+
+- **Account Information**: Retrieve details about Solana accounts
+- **Token Management**: Access token balances and transfers
+- **NFT Integration**: View and manage NFT collections
+- **Phantom Wallet Connection**: Connect to Phantom wallet for transactions
 
 ```python
-stats = mcp.get_tool_usage_stats()
-print(f"Most used tool: {max(stats.items(), key=lambda x: x[1]['usage_count'])[0]}")
+# Get Solana account information
+balance = await solana_integration.get_solana_balance("FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP")
+
+# Get Phantom wallet connection button
+wallet_button = solana_integration.create_agent_wallet_button_html()
 ```
 
 ## Extending the System
 
 ### Adding New Tools
 
-Adding new tools to OrganiX is straightforward:
+To add a new tool to the OrganiX MCP system:
 
+1. Define the tool function:
 ```python
-# Add a custom tool
+async def my_tool_function(param1, param2):
+    # Tool implementation
+    return result
+```
+
+2. Register with the MCP Manager:
+```python
 mcp.register_tool(
-    "translate_text",
-    "Translate text between languages",
-    async_translation_function,
-    source="custom"
+    "my_tool_name",
+    "Description of what my tool does",
+    my_tool_function
 )
+```
+
+3. (Optional) Sync with Composio:
+```python
+await mcp.refresh_composio_tools()
 ```
 
 ### Creating Custom Agents
 
-You can create custom specialized agents:
+To add a new specialized agent:
 
+1. Define the agent persona:
 ```python
-# Create a custom agent
-coordinator.register_agent(
-    "financial_advisor",
-    ChatPersona(
-        name="Financial Advisor",
-        description="Specialized in financial analysis and advice",
-        system_prompt="You are a financial advisor specialized in..."
-    )
+from advanced_chat import ChatPersona
+
+my_agent = ChatPersona(
+    name="My Specialist",
+    description="Specialized in specific domain tasks",
+    system_prompt="You are a specialist agent within OrganiX..."
 )
 ```
 
-### Tool Development Guidelines
-
-When developing new tools:
-
-1. Make tools atomic and focused on a single capability
-2. Include clear error handling and input validation
-3. Add comprehensive documentation
-4. Test with a variety of inputs
-5. Consider performance implications
-
-## Zero-Knowledge Integration
-
-OrganiX includes zero-knowledge capabilities that protect privacy while enabling verification:
-
-### Creating ZK Proofs
-
+2. Register with the coordinator:
 ```python
-# Create a proof of knowledge
-proof = await zk_proofs.create_proof_of_knowledge(sensitive_data)
+from advanced_chat import coordinator
 
-# Create a proof of ownership
-proof = await zk_proofs.create_proof_of_ownership(wallet_address, asset_id)
-```
-
-### Verifying ZK Proofs
-
-```python
-# Verify a proof
-verification = await zk_proofs.verify_proof(proof)
-```
-
-## Blockchain Capabilities
-
-OrganiX integrates deeply with the Solana blockchain:
-
-### Wallet Integration
-
-```python
-# Generate a Phantom wallet connection button
-html = solana_integration.create_agent_wallet_button_html("OrganiX DApp")
-```
-
-### Blockchain Data Access
-
-```python
-# Get account data
-balance = await solana_integration.get_solana_balance(address)
-tokens = await solana_integration.get_solana_token_accounts(address)
-nfts = await solana_integration.get_nfts_by_owner(address)
-```
-
-### Transaction Analysis
-
-```python
-# Get recent transactions
-txs = await solana_integration.get_recent_solana_transactions(address)
+coordinator.register_agent("my_agent_id", my_agent)
 ```
 
 ## Best Practices
 
+### Tool Design
+
+- **Atomic Functionality**: Each tool should do one thing well
+- **Clear Documentation**: Provide detailed descriptions and examples
+- **Error Handling**: Implement robust error management
+- **Input Validation**: Validate inputs to prevent issues
+- **Asynchronous Design**: Use async/await for non-blocking operations
+
+### Agent Integration
+
+- **Specialized Personas**: Create focused agents for specific domains
+- **Clear Intent Patterns**: Define clear patterns for routing queries
+- **Context Management**: Properly handle conversation context
+- **Memory Integration**: Leverage the memory system for continuity
+
 ### Security Considerations
 
-1. Never expose private keys or sensitive credentials through tools
-2. Implement proper permission checks on system-level tools
-3. Sanitize all user inputs before execution
-4. Use zero-knowledge proofs when handling sensitive data
-5. Implement rate limiting on resource-intensive tools
+- **Access Control**: Implement appropriate access controls for sensitive tools
+- **Input Sanitization**: Sanitize inputs to prevent injection attacks
+- **Rate Limiting**: Implement rate limiting for external API calls
+- **Sensitive Data Handling**: Use secure methods for handling credentials
 
-### Performance Optimization
+## Example Implementations
 
-1. Cache frequent tool results when appropriate
-2. Use asynchronous execution for I/O-bound operations
-3. Batch similar operations when possible
-4. Monitor tool execution times and optimize slow tools
-5. Implement timeout mechanisms for external API calls
+### Basic Tool Usage
 
-### Reliability
+```python
+from mcp_manager import MCPManager
 
-1. Implement proper error handling for all tools
-2. Add retry logic for network-dependent operations
-3. Provide fallback mechanisms when primary tools fail
-4. Log detailed error information for debugging
-5. Regularly test tools with edge cases
+# Initialize the MCP manager
+mcp = MCPManager()
 
-## Conclusion
+# Register a simple tool
+mcp.register_tool(
+    "weather",
+    "Get current weather for a location",
+    async lambda location: await fetch_weather(location)
+)
 
-The OrganiX MCP integration provides a powerful framework for extending AI capabilities through standardized tool access. By following the guidelines and best practices in this documentation, you can leverage these capabilities to build sophisticated agent systems that integrate with blockchain, zero-knowledge technology, and other advanced features.
+# Process a query using the tool
+result = await mcp.process_with_tools("What's the weather in New York?")
+```
 
-For additional help or to report issues, contact the OrganiX development team or open an issue on GitHub.
+### Advanced Multi-Agent Workflow
+
+```python
+from advanced_chat import coordinator
+
+# Process with specific agents
+blockchain_result = await coordinator.process_with_agent(
+    "blockchain", 
+    "How do I connect to a Solana wallet?"
+)
+
+# Collaborative processing
+combined_result = await coordinator.multi_agent_collaboration(
+    "Create a Python app that uses ZK proofs and MCP",
+    agent_ids=["coder", "blockchain", "mcp"]
+)
+
+# Get explanation of the system
+explanation = await coordinator.explain_multi_agent_system()
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Tool Not Found**: Ensure the tool is properly registered
+2. **Composio Connection Failed**: Check API keys and network connectivity
+3. **Agent Not Responding**: Verify Claude API credentials and quota
+4. **Memory Retrieval Issues**: Check ChromaDB setup and permissions
+
+### Debugging
+
+The system includes comprehensive logging:
+
+```python
+from utils import log
+
+# Enable debug logging
+log.setLevel("DEBUG")
+
+# Log a test message
+log.debug("Testing debugging output")
+```
+
+## Resources
+
+- [Composio Documentation](https://docs.composio.dev/)
+- [Model Context Protocol Spec](https://github.com/anthropics/anthropic-cookbook/tree/main/api/model_context_protocol)
+- [ChromaDB Documentation](https://docs.trychroma.com/)
+- [Solana Web3.js Documentation](https://solana-labs.github.io/solana-web3.js/)
+
+## Contributing
+
+To contribute to the OrganiX MCP integration:
+
+1. Fork the repository
+2. Create a feature branch
+3. Add your improvements
+4. Submit a pull request
+
+We welcome contributions in the following areas:
+- New tools
+- Improved agent personas
+- Enhanced documentation
+- Bug fixes
+- Performance optimizations
