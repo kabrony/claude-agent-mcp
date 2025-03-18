@@ -154,51 +154,30 @@ composio_client.configure_cli()
 result = composio_client.run_cli_command("list tools")
 ```
 
-### Connection Management
-
-The Composio client handles connection state and credentials:
-
-```python
-# Check connection status
-status = await composio_client.check_connection()
-
-# Output:
-# {
-#   "status": "connected",
-#   "connection_details": {
-#     "connection_id": "c9624deb-35f1-46b7-a67d-80cb7508fa3a",
-#     "integration_id": "c6925237-9127-4a62-98e4-611ed229e890",
-#     "status": "ACTIVE",
-#     "app_name": "OrganiX"
-#   }
-# }
-```
-
 ## Multi-Agent Coordination
 
-OrganiX implements a sophisticated multi-agent coordination system that leverages MCP for tool access and integration.
+OrganiX implements an advanced multi-agent system that leverages MCP for coordination and collaboration:
 
-### Agent Specialization
+### Agent Types
 
-The system includes several specialized agents, each with unique capabilities:
+The system includes specialized agents that focus on different domains:
 
-- **Researcher**: Focused on information retrieval and synthesis
-- **Coder**: Specialized in code generation and analysis
-- **Blockchain Specialist**: Expert in blockchain technologies and operations
-- **MCP Specialist**: Focused on tool integration and management
-- **AGI Specialist**: Handles complex, multi-domain reasoning tasks
+- **Research Specialist**: Information retrieval and synthesis
+- **Code Specialist**: Programming and technical implementation
+- **Blockchain Specialist**: Blockchain and cryptocurrency operations
+- **MCP Specialist**: Tool selection and integration
+- **AGI Specialist**: Complex reasoning and multi-domain problem solving
 
 ### Intent-Based Routing
 
-Queries are automatically routed to the most appropriate agent based on detected intent:
+Queries are analyzed for intent and routed to the most appropriate agent:
 
 ```python
-# Route query to the best agent
-result = await coordinator.route_to_best_agent(query)
+# Automatic routing based on intent
+from advanced_chat import coordinator
 
-# Get agent information
-agent_id = result.get("agent_id")
-agent_name = result.get("agent_name")
+result = await coordinator.route_to_best_agent("How does Solana's proof of history work?")
+# This will automatically route to the Blockchain Specialist
 ```
 
 ### Collaborative Problem Solving
@@ -206,31 +185,69 @@ agent_name = result.get("agent_name")
 For complex problems, multiple agents can collaborate:
 
 ```python
-# Process with multiple agents
+# Multi-agent collaboration
 result = await coordinator.multi_agent_collaboration(
-    query,
-    agent_ids=["researcher", "coder", "blockchain"]
+    "Create a Python app that integrates with Solana and uses MCP for tool access"
 )
-
-# The result includes information about all contributing agents
-contributing_agents = result.get("contributing_agents")
+# This will involve the Code Specialist, Blockchain Specialist, and MCP Specialist
 ```
 
-### Context Awareness
+The collaboration system:
+1. Routes the query to multiple relevant agents
+2. Collects responses from each specialist
+3. Uses the AGI Specialist to synthesize a comprehensive response
+4. Returns the unified solution with attribution to contributing agents
 
-Agents maintain context across interactions using the memory system:
+### Context-Aware Processing
+
+Agents maintain context across interactions:
 
 ```python
 # Process with context awareness
-result = await coordinator.process_with_context_awareness(query)
-
-# This automatically incorporates relevant past interactions
+result = await coordinator.process_with_context_awareness(
+    "How would I implement that?"  # Ambiguous query that needs context
+)
+# The system will incorporate relevant prior conversations to understand "that"
 ```
 
-### Tool Access
+## Advanced Capabilities
 
-All agents have access to the full range of MCP tools, but specific agents may have specialized knowledge about certain tools:
+OrganiX MCP offers several advanced capabilities:
 
-- The **Blockchain Specialist** has deep knowledge of blockchain tools
-- The **MCP Specialist** is expert in tool selection and usage
-- The **Researcher** excels at using web search and information retrieval tools
+### Tool Usage Analytics
+
+Track and analyze how tools are being used:
+
+```python
+# Get tool usage statistics
+stats = mcp.get_tool_usage_stats()
+print(f"Most used tool: {max(stats.items(), key=lambda x: x[1]['usage_count'])[0]}")
+```
+
+### Automatic Tool Selection
+
+The system can automatically select the appropriate tools for a task:
+
+```python
+# Let MCP select the right tools
+result = await mcp.process_with_tools(
+    "What's the current price of SOL and how many people own more than 1000 SOL?"
+)
+# MCP will identify and use blockchain tools without explicit specification
+```
+
+### Composable Tool Chains
+
+Tools can be combined into chains for complex workflows:
+
+```python
+# Define a tool chain
+mcp.register_tool(
+    "research_and_summarize",
+    "Research a topic and provide a summary",
+    lambda topic: {
+        "research": mcp.execute_tool("web_search", {"query": topic}),
+        "summary": mcp.execute_tool("summarize", {"text": research["results"]})
+    }
+)
+```
