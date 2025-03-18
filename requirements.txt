@@ -11,11 +11,6 @@ rich==13.7.0
 numpy==1.25.2
 requests==2.31.0
 pyyaml==6.0.1
-# Blockchain and ZK dependencies
-pysolana==1.0.2
 pynacl==1.5.0
-borsh==0.3.1
+base58==2.1.1
 solana==0.30.2
-anchorpy==0.18.0
-# Web interactions
-beautifulsoup4==4.12.2
