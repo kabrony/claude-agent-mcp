@@ -12,17 +12,31 @@ import re
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Import configuration manager
+try:
+    from config_manager import config_manager
+    CONFIG_AVAILABLE = True
+except ImportError:
+    CONFIG_AVAILABLE = False
+    from dotenv import load_dotenv
+    load_dotenv()  # Fallback to direct env loading
 
 class ClaudeClient:
-    def __init__(self, api_key=None, model="claude-3-7-sonnet-20250219"):
-        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+    def __init__(self, api_key=None, model=None):
+        # Get API key from config manager if available, with fallbacks
+        if CONFIG_AVAILABLE:
+            self.api_key = api_key or config_manager.get_api_key("anthropic")
+            self.model = model or config_manager.get_current_model()
+            self.base_url = config_manager.default_apis["anthropic"]["api_url"]
+        else:
+            # Legacy fallback
+            self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+            self.model = model or os.getenv("CLAUDE_MODEL", "claude-3-7-sonnet-20250219")
+            self.base_url = "https://api.anthropic.com/v1"
+            
         if not self.api_key:
-            raise ValueError("ANTHROPIC_API_KEY environment variable or api_key parameter is required")
+            raise ValueError("Anthropic API key not found. Please configure it using config_manager or set ANTHROPIC_API_KEY environment variable.")
         
-        self.model = model
-        self.base_url = "https://api.anthropic.com/v1"
         self.messages = []
         self.conversations = {}
         self.current_conversation_id = None
@@ -32,6 +46,9 @@ class ClaudeClient:
             "average_response_time": 0,
             "requests_made": 0
         }
+        
+        # Initialize with a new conversation
+        self.start_new_conversation()
         
     def start_new_conversation(self, title=None):
         """Start a new conversation with a fresh message history"""
@@ -89,6 +106,13 @@ class ClaudeClient:
             
     async def send_message(self, content, system=None, max_tokens=1024):
         """Send a message to Claude and return the response"""
+        # Check if API key is available
+        if not self.api_key and CONFIG_AVAILABLE:
+            # Try to get API key again (in case it was added since initialization)
+            self.api_key = config_manager.get_api_key("anthropic")
+            if not self.api_key:
+                return "API key not configured. Please run the configuration manager to set up your API keys."
+        
         # Add user message to conversation history
         self._save_message("user", content)
         
@@ -117,7 +141,12 @@ class ClaudeClient:
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    raise Exception(f"API request failed with status {response.status}: {error_text}")
+                    error_message = f"API request failed with status {response.status}: {error_text}"
+                    
+                    # Add error message to conversation
+                    self._save_message("system", f"Error: {error_message}")
+                    
+                    raise Exception(error_message)
                 
                 result = await response.json()
                 
@@ -136,6 +165,14 @@ class ClaudeClient:
                 
     async def stream_message(self, content, system=None, max_tokens=1024):
         """Stream a message response from Claude"""
+        # Check if API key is available
+        if not self.api_key and CONFIG_AVAILABLE:
+            # Try to get API key again
+            self.api_key = config_manager.get_api_key("anthropic")
+            if not self.api_key:
+                yield "API key not configured. Please run the configuration manager to set up your API keys."
+                return
+        
         # Add user message to conversation history
         self._save_message("user", content)
         
@@ -166,7 +203,9 @@ class ClaudeClient:
                 ) as response:
                     if response.status != 200:
                         error_text = await response.text()
-                        raise Exception(f"API request failed with status {response.status}: {error_text}")
+                        error_message = f"API request failed with status {response.status}: {error_text}"
+                        yield f"Error: {error_message}"
+                        return
                         
                     full_response = ""
                     async for line in response.content:
@@ -198,11 +237,19 @@ class ClaudeClient:
             self.response_analytics["total_tokens"] += len(content) // 4 + len(full_response) // 4  # Rough estimate
             
         except Exception as e:
-            print(f"Error streaming message: {e}")
-            raise
+            error_message = f"Error streaming message: {str(e)}"
+            self._save_message("system", f"Error: {error_message}")
+            yield f"Error: {error_message}"
             
     async def send_message_with_tools(self, content, tools, system=None, max_tokens=1024):
         """Send a message to Claude with tools and handle tool execution"""
+        # Check if API key is available
+        if not self.api_key and CONFIG_AVAILABLE:
+            # Try to get API key again
+            self.api_key = config_manager.get_api_key("anthropic")
+            if not self.api_key:
+                return "API key not configured. Please run the configuration manager to set up your API keys."
+        
         # Add user message to conversation history
         self._save_message("user", content)
         
@@ -242,7 +289,9 @@ class ClaudeClient:
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    raise Exception(f"API request failed with status {response.status}: {error_text}")
+                    error_message = f"API request failed with status {response.status}: {error_text}"
+                    self._save_message("system", f"Error: {error_message}")
+                    raise Exception(error_message)
                 
                 result = await response.json()
                 
@@ -320,7 +369,9 @@ class ClaudeClient:
                     ) as follow_up_response:
                         if follow_up_response.status != 200:
                             error_text = await follow_up_response.text()
-                            raise Exception(f"API request failed with status {follow_up_response.status}: {error_text}")
+                            error_message = f"API request failed with status {follow_up_response.status}: {error_text}"
+                            self._save_message("system", f"Error: {error_message}")
+                            raise Exception(error_message)
                         
                         follow_up_result = await follow_up_response.json()
                         
@@ -463,6 +514,9 @@ class ClaudeClient:
             filename = f"conversation_{safe_title}_{timestamp}.json"
             
         try:
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(os.path.abspath(filename)) or '.', exist_ok=True)
+            
             with open(filename, 'w') as f:
                 json.dump(conversation, f, indent=2)
             return filename
@@ -498,7 +552,8 @@ class ClaudeClient:
             "total_tokens": self.response_analytics["total_tokens"],
             "average_response_time": self.response_analytics["average_response_time"],
             "total_conversations": len(self.conversations),
-            "total_messages": sum(len(conv["messages"]) for conv in self.conversations.values())
+            "total_messages": sum(len(conv["messages"]) for conv in self.conversations.values()),
+            "current_model": self.model
         }
         
     def clear_conversation(self):
@@ -553,3 +608,70 @@ class ClaudeClient:
         }
         
         return summary
+        
+    def change_model(self, new_model):
+        """Change the Claude model being used"""
+        if CONFIG_AVAILABLE:
+            # Update in config manager
+            if config_manager.set_current_model(new_model):
+                self.model = new_model
+                return True
+        else:
+            # Just update locally
+            self.model = new_model
+            return True
+            
+        return False
+        
+    def get_available_models(self):
+        """Get information about available Claude models"""
+        if CONFIG_AVAILABLE:
+            return config_manager.get_model_info()
+        else:
+            # Hardcoded fallback
+            return {
+                "claude-3-7-sonnet-20250219": {
+                    "name": "Claude 3.7 Sonnet",
+                    "description": "Latest Claude model with enhanced reasoning"
+                },
+                "claude-3-opus-20240229": {
+                    "name": "Claude 3 Opus",
+                    "description": "Most capable Claude model for complex tasks"
+                },
+                "claude-3-sonnet-20240229": {
+                    "name": "Claude 3 Sonnet",
+                    "description": "Balanced Claude model for general tasks"
+                },
+                "claude-3-haiku-20240307": {
+                    "name": "Claude 3 Haiku",
+                    "description": "Fast, efficient Claude model"
+                }
+            }
+
+async def main():
+    """Test the Claude client"""
+    client = ClaudeClient()
+    
+    print(f"Using model: {client.model}")
+    print("Available models:")
+    for model_id, info in client.get_available_models().items():
+        print(f"- {info['name']} ({model_id})")
+        
+    query = "Hello! Can you tell me about yourself?"
+    print(f"\nSending query: {query}")
+    
+    response = await client.send_message(query)
+    print(f"\nResponse: {response[:200]}...")
+    
+    analytics = client.get_analytics()
+    print("\nAnalytics:")
+    for key, value in analytics.items():
+        print(f"- {key}: {value}")
+        
+    print("\nConversation summary:")
+    summary = client.summarize_conversation()
+    for key, value in summary.items():
+        print(f"- {key}: {value}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
