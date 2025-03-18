@@ -53,3 +53,45 @@ The OrganiX MCP architecture follows a modular design that separates concerns be
 ```
 
 The MCP Manager is the central component that handles tool registration, execution, and coordination. It integrates with the Composio platform for enhanced tool management and connects to the broader OrganiX ecosystem.
+
+## Core Components
+
+### MCP Manager
+
+The `MCPManager` class is the heart of the MCP integration. It:
+
+- Registers tools with unique identifiers and descriptions
+- Tracks tool usage and statistics
+- Handles tool execution and error management
+- Synchronizes with Composio for external tool integration
+- Provides analytics on tool performance and usage patterns
+
+```python
+# Example: Creating and using MCP Manager
+from mcp_manager import MCPManager
+
+# Initialize manager
+mcp = MCPManager()
+
+# Register a tool
+mcp.register_tool(
+    "calculate_average",
+    "Calculate the average of a list of numbers",
+    lambda numbers: sum(numbers) / len(numbers)
+)
+
+# Use the tool
+result = await mcp.process_with_tools("What's the average of 10, 20, and 30?")
+print(result)  # The MCP will identify the tool need and execute it
+```
+
+### Tool Registration
+
+Tools in OrganiX MCP follow a standard format:
+
+- **Name**: Unique identifier for the tool
+- **Description**: Human-readable description of the tool's functionality
+- **Function**: The actual implementation that executes when the tool is called
+- **Metadata**: Optional additional information about the tool
+
+Each tool can have optional input validation, error handling, and usage tracking.
