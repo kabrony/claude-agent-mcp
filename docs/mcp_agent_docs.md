@@ -199,3 +199,103 @@ Agents communicate through a standardized message format that includes:
 - Tool usage results
 - Confidence scores
 - Reasoning steps
+
+## Advanced Capabilities
+
+OrganiX extends basic MCP functionality with several advanced capabilities:
+
+### Context Awareness
+
+The system maintains context across interactions through:
+
+- **Memory Integration**: Retrieving relevant past interactions
+- **Importance Ratings**: Prioritizing critical information
+- **Temporal Awareness**: Understanding time-based relationships between queries
+
+```python
+# Process a query with context awareness
+result = await coordinator.process_with_context_awareness(
+    "Follow up on our previous discussion about blockchain security"
+)
+```
+
+### Intent Detection
+
+The `ChatIntent` class analyzes user queries to:
+
+- Identify the primary intent
+- Detect secondary intents
+- Calculate confidence scores
+- Track intent patterns over time
+
+```python
+from advanced_chat import ChatIntent
+
+# Analyze intent
+intent = ChatIntent("Can you find information about Solana NFT marketplaces?")
+print(f"Primary intent: {intent.primary_intent}")
+print(f"Confidence: {intent.confidence}")
+print(f"All detected intents: {intent.detected_intents}")
+```
+
+### Tool Usage Analytics
+
+The MCP Manager tracks:
+
+- Tool usage frequency
+- Success/failure rates
+- Execution times
+- Common input patterns
+
+```python
+# Get tool usage statistics
+stats = mcp.get_tool_usage_stats()
+print(stats)
+```
+
+## Zero-Knowledge Integration
+
+OrganiX incorporates zero-knowledge proof technology for enhanced privacy and security:
+
+### ZK Proof Creation
+
+The system can generate ZK proofs for:
+
+- **Knowledge Proofs**: Proving you know something without revealing it
+- **Ownership Proofs**: Proving you own an asset without revealing your identity
+- **Computation Proofs**: Proving a computation was performed correctly
+
+```python
+# Create a ZK proof of knowledge
+proof = await coordinator.create_zero_knowledge_proof(
+    "knowledge",
+    {"secret_data": "sensitive information"}
+)
+
+# Create a ZK proof of ownership
+proof = await coordinator.create_zero_knowledge_proof(
+    "ownership",
+    {"address": "FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP", "asset_id": "asset123"}
+)
+```
+
+### ZK Proof Verification
+
+The system can verify ZK proofs:
+
+```python
+# Verify a ZK proof
+result = await coordinator.verify_zero_knowledge_proof(proof)
+if result["verified"]:
+    print("Proof verified successfully")
+else:
+    print("Invalid proof")
+```
+
+### Privacy-Preserving Computations
+
+Zero-knowledge proofs enable:
+
+- Verifiable computations without revealing inputs
+- Identity verification without revealing personal information
+- Data sharing with cryptographic guarantees
