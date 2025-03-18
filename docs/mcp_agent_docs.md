@@ -95,3 +95,45 @@ Tools in OrganiX MCP follow a standard format:
 - **Metadata**: Optional additional information about the tool
 
 Each tool can have optional input validation, error handling, and usage tracking.
+
+## Tool Integration
+
+OrganiX comes with several built-in tools:
+
+### System Tools
+- `list_files` - List files in a directory
+- `execute_command` - Execute system commands (with security restrictions)
+
+### Web Research Tools
+- `web_search` - Search the web for information
+- `extract_url` - Extract content from a specific URL
+
+### Memory Tools
+- `retrieve_memory` - Retrieve relevant memories
+- `retrieve_memory_by_timeframe` - Get memories from a specific time period
+- `summarize_memories` - Generate summaries of recent memories
+
+### Blockchain Tools
+- `get_solana_balance` - Get SOL balance for an address
+- `get_token_accounts` - Get token accounts for an address
+- `get_nfts` - Get NFTs owned by an address
+
+### Advanced Tools
+- `create_zk_proof` - Create zero-knowledge proofs
+- `verify_zk_proof` - Verify zero-knowledge proofs
+
+Example of using a tool directly:
+
+```python
+# Import the agent
+from agent import ClaudeAgent
+
+# Initialize agent
+agent = ClaudeAgent()
+
+# Use a tool through the agent's MCP manager
+addresses = ["FxsqrtTMuAKYgNwiGRD3FwVr1FtsrfUJMPWq49dZVERP"]
+for address in addresses:
+    result = await agent.mcp.process_with_tools(f"What's the SOL balance of {address}?")
+    print(f"Balance for {address}: {result}")
+```
