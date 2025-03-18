@@ -121,3 +121,59 @@ OrganiX comes with several built-in tools:
 ### Advanced Tools
 - `create_zk_proof` - Create zero-knowledge proofs
 - `verify_zk_proof` - Verify zero-knowledge proofs
+
+## Composio Integration
+
+OrganiX features deep integration with Composio, a platform that extends MCP with additional capabilities:
+
+### Synchronization
+
+The MCP Manager automatically synchronizes with Composio to:
+
+1. Register local tools with the Composio platform
+2. Import tools from Composio to the local environment
+3. Maintain consistent tool definitions across environments
+
+```python
+# Sync tools with Composio
+await mcp.refresh_composio_tools()
+```
+
+### Composio CLI
+
+The integration includes support for the Composio CLI, allowing command-line operations:
+
+```bash
+# Install Composio CLI
+composio_client.install_cli()
+
+# Configure CLI with credentials
+composio_client.configure_cli()
+
+# Run CLI commands
+result = composio_client.run_cli_command("list tools")
+```
+
+### Connection Management
+
+The Composio client handles connection state and credentials:
+
+```python
+# Check connection status
+status = await composio_client.check_connection()
+
+# Output:
+# {
+#   "status": "connected",
+#   "connection_details": {
+#     "connection_id": "c9624deb-35f1-46b7-a67d-80cb7508fa3a",
+#     "integration_id": "c6925237-9127-4a62-98e4-611ed229e890",
+#     "status": "ACTIVE",
+#     "app_name": "OrganiX"
+#   }
+# }
+```
+
+## Multi-Agent Coordination
+
+OrganiX implements a sophisticated multi-agent coordination system that leverages MCP for tool access and integration.
