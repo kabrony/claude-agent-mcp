@@ -1,56 +1,81 @@
-# OrganiX Multi-Agent System
+# OrganiX Multi-Agent System Architecture
 
 ## Overview
 
-OrganiX implements an advanced multi-agent system that coordinates specialized AI agents to handle different types of tasks. This architecture enables more effective problem-solving, context-aware responses, and domain-specific expertise through agent specialization and collaboration.
+The OrganiX Multi-Agent System is an advanced architecture that enables specialized AI agents to collaborate on complex tasks. By dividing capabilities across specialized agents and coordinating their interactions, the system achieves more sophisticated reasoning, more accurate responses, and better domain-specific expertise than a single general-purpose agent.
 
-## Table of Contents
+This document explains the architecture, components, and usage of the multi-agent system, including its integration with the Model Context Protocol (MCP) and various specialized capabilities.
 
-1. [Architecture](#architecture)
-2. [Agent Types](#agent-types)
-3. [Intent Detection](#intent-detection)
-4. [Routing Mechanism](#routing-mechanism)
-5. [Multi-Agent Collaboration](#multi-agent-collaboration)
-6. [Context Awareness](#context-awareness)
-7. [Memory Integration](#memory-integration)
-8. [Usage Examples](#usage-examples)
-9. [Extending with Custom Agents](#extending-with-custom-agents)
-10. [Best Practices](#best-practices)
+## Core Concepts
 
-## Architecture
+### Specialized Agents
 
-The OrganiX multi-agent system uses a coordinator-based architecture:
+The multi-agent system is built around the concept of specialized agents, each with:
+
+- Specific expertise and capabilities
+- Custom system prompts defining their roles
+- Optimized reasoning patterns for their domains
+- Access to domain-specific tools and integrations
+
+### Intent Detection and Routing
+
+The system includes sophisticated intent detection that:
+
+- Analyzes user queries for underlying intent
+- Maps intents to the most appropriate specialized agent
+- Dynamically adjusts routing based on confidence scores
+- Allows explicit agent selection when needed
+
+### Collaborative Problem-Solving
+
+For complex problems spanning multiple domains, the system enables:
+
+- Parallel processing across multiple specialized agents
+- Synthesis of diverse perspectives and expertise
+- Coordinated task decomposition and integration
+- Meta-level reasoning through the AGI agent
+
+## System Architecture
 
 ```
-┌──────────────────┐
-│                  │
-│  User Interface  │
-│                  │
-└────────┬─────────┘
-         │
-         ▼
-┌────────────────────┐
-│                    │
-│ MultiAgentCoordinator │
-│                    │
-└──┬───────┬────────┬┘
-   │       │        │
-   ▼       ▼        ▼
-┌──────┐ ┌──────┐ ┌──────┐
-│Agent1│ │Agent2│ │Agent3│
-└──────┘ └──────┘ └──────┘
+                         ┌──────────────────┐
+                         │                  │
+                         │  User Interface  │
+                         │                  │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+┌───────────────────┐    ┌────────────────────┐    ┌───────────────────┐
+│                   │    │                    │    │                   │
+│  Memory System    │◄───┤  Multi-Agent       │───►│  Claude Client    │
+│                   │    │  Coordinator       │    │                   │
+└───────────────────┘    └─────────┬──────────┘    └───────────────────┘
+                                   │
+                                   ▼
+┌───────────────────┐    ┌────────────────────┐    ┌───────────────────┐
+│                   │    │                    │    │                   │
+│  Intent Analysis  │◄───┤  Agent Registry    │───►│  MCP Manager      │
+│                   │    │                    │    │                   │
+└───────────────────┘    └────────────────────┘    └───────────────────┘
+                                   │
+                                   ▼
+           ┌───────────────────────────────────────────────┐
+           │                                               │
+           │               Specialized Agents              │
+           │                                               │
+           ├───────────┬───────────┬───────────┬──────────┤
+           │           │           │           │          │
+           │ Researcher │  Coder   │ Blockchain│   MCP    │
+           │           │           │           │          │
+           └───────────┴───────────┴───────────┴──────────┘
 ```
 
-The `MultiAgentCoordinator` serves as the central hub, analyzing incoming queries, detecting intent, and routing to the appropriate specialized agent. It can also facilitate collaboration between multiple agents to solve complex problems.
+## Specialized Agents
 
-## Agent Types
-
-OrganiX includes several built-in specialized agents:
-
-### Research Specialist Agent
+### Research Specialist
 
 ```python
-researcher_agent = ChatPersona(
+researcher_persona = ChatPersona(
     name="Research Specialist",
     description="Specialized in deep research and information synthesis",
     system_prompt="""You are a Research Specialist agent within OrganiX.
@@ -60,12 +85,16 @@ When answering questions, prioritize accuracy, thoroughness, and objectivity."""
 )
 ```
 
-Handles: Information retrieval, fact-checking, research synthesis, academic topics
+#### Capabilities:
+- In-depth information gathering and synthesis
+- Multi-source corroboration and fact-checking
+- Comprehensive explanations of complex topics
+- Balanced presentation of different perspectives
 
-### Code Specialist Agent
+### Code Specialist
 
 ```python
-coder_agent = ChatPersona(
+coder_persona = ChatPersona(
     name="Code Specialist",
     description="Specialized in generating high-quality code solutions",
     system_prompt="""You are a Code Specialist agent within OrganiX.
@@ -75,12 +104,16 @@ Explain your approach clearly and provide context for your implementation decisi
 )
 ```
 
-Handles: Programming tasks, code generation, debugging, algorithm design
+#### Capabilities:
+- Software development and coding solutions
+- Algorithm design and optimization
+- Code review and improvement suggestions
+- Documentation and implementation explanations
 
-### Blockchain Specialist Agent
+### Blockchain Specialist
 
 ```python
-blockchain_agent = ChatPersona(
+blockchain_persona = ChatPersona(
     name="Blockchain Specialist",
     description="Specialized in blockchain technology and decentralized applications",
     system_prompt="""You are a Blockchain Specialist agent within OrganiX.
@@ -90,12 +123,16 @@ When discussing blockchain topics, prioritize technical accuracy and security.""
 )
 ```
 
-Handles: Blockchain questions, cryptocurrency topics, NFTs, wallet connectivity
+#### Capabilities:
+- Blockchain technology explanations
+- Solana ecosystem expertise
+- NFT and token analysis
+- Smart contract and DApp guidance
 
-### MCP Specialist Agent
+### MCP Specialist
 
 ```python
-mcp_agent = ChatPersona(
+mcp_persona = ChatPersona(
     name="MCP Specialist",
     description="Specialized in Model Context Protocol and tool usage",
     system_prompt="""You are an MCP Specialist agent within OrganiX.
@@ -106,12 +143,16 @@ When using tools, prioritize clear input/output handling and error management.""
 )
 ```
 
-Handles: Tool selection, MCP integration, tool chain creation, API connectivity
+#### Capabilities:
+- Tool selection and orchestration
+- MCP integration with external systems
+- Composio synchronization and management
+- Tool usage analytics and optimization
 
-### AGI Specialist Agent
+### AGI Specialist
 
 ```python
-agi_agent = ChatPersona(
+agi_persona = ChatPersona(
     name="AGI Specialist",
     description="Specialized in advanced reasoning and multi-domain problem solving",
     system_prompt="""You are an AGI Specialist agent within OrganiX.
@@ -124,219 +165,260 @@ and clear explanation of your thought process."""
 )
 ```
 
-Handles: Complex reasoning, multi-domain problems, creative problem-solving
+#### Capabilities:
+- Advanced reasoning across domain boundaries
+- Complex problem decomposition
+- Insight integration from multiple domains
+- Meta-level synthesis of specialized agent outputs
 
 ## Intent Detection
 
-The system uses intent analysis to determine which agent is best suited for a query:
+The intent detection system analyzes user queries to determine the most appropriate agent:
 
 ```python
-# ChatIntent class analyzes text to detect intent patterns
-intent = ChatIntent(query)
-primary_intent = intent.primary_intent  # E.g., "blockchain", "web_search", etc.
-confidence = intent.confidence          # Confidence score for the detection
-```
-
-Intent patterns are detected using regular expression patterns matched against the query text. The current system can detect these intent types:
-
-- `question`: General questions (who, what, when, why, how)
-- `command`: Requests for action (please, can you, would you)
-- `chat`: Social interaction (hello, hi, hey)
-- `feedback`: User feedback (thanks, good, bad)
-- `blockchain`: Blockchain topics (solana, wallet, nft)
-- `web_search`: Information seeking (search, find, look up)
-- `agent_action`: Action requests (run, execute, perform)
-
-## Routing Mechanism
-
-Based on detected intent, the coordinator routes to the best agent:
-
-```python
-# Route based on intent to the appropriate agent
-if intent.primary_intent == "blockchain":
-    return await process_with_agent("blockchain", query)
-elif intent.primary_intent == "web_search":
-    return await process_with_agent("researcher", query)
-# etc.
-```
-
-The routing is also informed by specific keywords in the query. For example, MCP-related terms will route to the MCP specialist, while AGI-related terms route to the AGI specialist.
-
-## Multi-Agent Collaboration
-
-For complex queries, multiple agents can collaborate:
-
-```python
-async def multi_agent_collaboration(query, agent_ids=None):
-    # Use default agents if not specified
-    if not agent_ids:
-        agent_ids = ["researcher", "coder", "agi"]
+class ChatIntent:
+    """Identifies and tracks user intent in conversations"""
+    def __init__(self, text=None):
+        self.text = text
+        self.confidence = 0.0
+        self.detected_intents = {}
+        self.primary_intent = None
+        
+        # Process intent if text is provided
+        if text:
+            self.analyze_intent(text)
     
-    # Process with each agent in parallel
-    tasks = []
-    for agent_id in agent_ids:
-        tasks.append(process_with_agent(agent_id, query))
-    
-    # Gather all responses
-    results = await asyncio.gather(*tasks)
-    
-    # Synthesize responses
-    return synthesize_responses(results)
+    def analyze_intent(self, text):
+        """Analyze text to detect intent"""
+        self.text = text
+        
+        # Intent pattern matching
+        intent_patterns = {
+            "question": r"\b(?:who|what|when|where|why|how|is|are|can|could|would|should|do|does|did)\b.+\?",
+            "command": r"\b(?:please|can you|would you|i want|i need|make|create|show|find|get|search|help)\b",
+            "chat": r"\b(?:hi|hello|hey|howdy|greetings|good morning|good afternoon|good evening)\b",
+            "feedback": r"\b(?:thanks|thank you|good|great|excellent|awesome|terrible|bad|poor|not good|not helpful)\b",
+            "blockchain": r"\b(?:solana|phantom|wallet|blockchain|crypto|nft|token|transaction|eth|bitcoin|btc)\b",
+            "web_search": r"\b(?:search|find|look up|google|information about|latest|news|current)\b",
+            "agent_action": r"\b(?:run|execute|perform|start|activate)\b"
+        }
+        
+        # Pattern matching logic and confidence calculation
+        # ...
 ```
-
-The collaboration process involves:
-
-1. Processing the query with multiple specialized agents in parallel
-2. Collecting all agent responses
-3. Using a meta-agent (typically the AGI specialist) to synthesize a comprehensive response
-4. Returning the synthesized response, with information about which agents contributed
-
-## Context Awareness
-
-All agent interactions incorporate contextual information:
-
-```python
-async def process_with_context_awareness(query, context=None):
-    # Build context if not provided
-    if not context:
-        relevant_memories = memory.retrieve_relevant(query)
-        context = format_context(relevant_memories)
-    
-    # Combine query with context
-    enhanced_query = f"{query}\n\n{context}"
-    
-    # Process with appropriate agent
-    return await route_to_best_agent(enhanced_query)
-```
-
-The context includes:
-- Previous interactions
-- Relevant memories
-- User preferences
-- Current conversation state
-- External context (time, date, etc.)
-
-## Memory Integration
-
-The multi-agent system integrates deeply with the memory system:
-
-```python
-# Store agent interactions in memory
-memory_id = memory.add_memory(
-    "episodic",
-    query,
-    {"type": "agent_query", "agent_id": agent_id},
-    importance=3
-)
-
-# Store response
-memory.add_memory(
-    "episodic",
-    response,
-    {"type": "agent_response", "agent_id": agent_id, "query_memory_id": memory_id},
-    importance=3
-)
-```
-
-Each agent interaction is stored with metadata about the agent involved, creating a rich memory system that can be used for future context and analytics.
 
 ## Usage Examples
 
 ### Basic Agent Routing
 
 ```python
-from advanced_chat import coordinator
+# Initialize the multi-agent coordinator
+coordinator = MultiAgentCoordinator()
 
-# Process a query with automatic routing
-result = await coordinator.route_to_best_agent("How does Solana's proof of history work?")
+# Process a query with automatic routing to the best agent
+result = await coordinator.route_to_best_agent(
+    "How does zero-knowledge technology work in blockchain applications?"
+)
 
-print(f"Processed by: {result['agent_name']}")  # Should be "Blockchain Specialist"
-print(result["response"])
+print(f"Query handled by: {result['agent_name']}")
+print(f"Response: {result['response']}")
+```
+
+### Explicit Agent Selection
+
+```python
+# Process with a specific agent
+result = await coordinator.process_with_agent(
+    "coder",
+    "Write a Python function to connect to the Solana blockchain"
+)
+
+print(f"Response from Coder agent: {result['response']}")
 ```
 
 ### Multi-Agent Collaboration
 
 ```python
-# Process with multiple agents
+# Process with multiple agents collaborating
 result = await coordinator.multi_agent_collaboration(
-    "Create a Python application that connects to Solana blockchain and uses AI to analyze NFT trends",
-    agent_ids=["coder", "blockchain", "researcher", "agi"]
+    "Create a secure system that uses Solana for authentication and implements zero-knowledge proofs",
+    agent_ids=["coder", "blockchain", "mcp"]
 )
 
 print(f"Synthesized by: {result['agent_name']}")
-print(f"Contributing agents: {result['contributing_agents']}")
-print(result["response"])
+print(f"Contributors: {result['contributing_agents']}")
+print(f"Response: {result['response']}")
 ```
 
 ### Context-Aware Processing
 
 ```python
-# First query establishes context
-await coordinator.process_query("Tell me about zero-knowledge proofs")
-
-# Follow-up with context awareness
+# Process with context awareness
 result = await coordinator.process_with_context_awareness(
-    "How are they used in blockchain applications?"
+    "Improve the solution you provided earlier"
 )
 
-print(result["response"])  # Will include context from previous interaction
+print(f"Context-aware response: {result['response']}")
 ```
 
-## Extending with Custom Agents
+## Integration with MCP
 
-You can extend the system with your own custom agents:
+The multi-agent system integrates seamlessly with the Model Context Protocol:
 
 ```python
-from advanced_chat import coordinator, ChatPersona
-
-# Create a custom agent persona
-medical_agent = ChatPersona(
-    name="Medical Specialist",
-    description="Specialized in healthcare and medical information",
-    system_prompt="""You are a Medical Specialist agent within OrganiX.
-Your primary role is to provide accurate, evidence-based medical information.
-Always clarify that you're not providing medical advice, and recommend
-consulting with healthcare professionals for personal medical situations.
-Focus on general medical knowledge, research findings, and health education."""
+# MCP Specialist handling tool integration
+result = await coordinator.process_with_agent(
+    "mcp",
+    "I need to extract data from a webpage about Solana staking"
 )
 
-# Register the agent
-coordinator.register_agent("medical", medical_agent)
+# This automatically leverages appropriate tools through MCP
+print(f"Tool-enhanced response: {result['response']}")
+```
 
-# Use the custom agent
-result = await coordinator.process_with_agent("medical", "How does the immune system work?")
-print(result["response"])
+## Advanced Features
+
+### Agent Memory Integration
+
+Each agent interaction is stored in the memory system with appropriate metadata:
+
+```python
+# Memory is automatically stored for each agent interaction
+memory_id = memory_system.add_memory(
+    "episodic",
+    query,
+    {
+        "type": "agent_query",
+        "agent_id": agent_id,
+        "agent_name": persona.name
+    },
+    importance=3
+)
+```
+
+### Intelligent Query Routing
+
+The system dynamically routes queries based on intent and context:
+
+```python
+async def route_to_best_agent(self, query):
+    """Route a query to the most appropriate agent"""
+    # Analyze intent
+    intent = ChatIntent(query)
+    log.info(f"Detected intent: {intent.primary_intent} (confidence: {intent.confidence:.2f})")
+    
+    # Route based on intent
+    if intent.primary_intent == "blockchain" and "blockchain" in self.agents:
+        return await self.process_with_agent("blockchain", query)
+    elif intent.primary_intent == "web_search" and "researcher" in self.agents:
+        return await self.process_with_agent("researcher", query)
+    # ... other routing logic
+```
+
+### Cross-Domain Reasoning
+
+The AGI agent enables sophisticated reasoning across domain boundaries:
+
+```python
+# Process with the AGI agent for complex cross-domain reasoning
+result = await coordinator.process_with_agent(
+    "agi",
+    "What are the technical, economic, and ethical implications of implementing zero-knowledge proofs for digital identity verification on Solana?"
+)
+```
+
+## System Analysis and Visualization
+
+The system provides tools for analyzing and visualizing the multi-agent architecture:
+
+```python
+# Generate explanation of the multi-agent system
+explanation = await coordinator.explain_multi_agent_system()
+print(explanation["explanation"])
+```
+
+## Extending the System
+
+### Creating Custom Agents
+
+You can easily create and register new specialized agents:
+
+```python
+# Create a custom agent persona
+security_persona = ChatPersona(
+    name="Security Specialist",
+    description="Expert in cybersecurity and secure system design",
+    system_prompt="""You are a Security Specialist agent within OrganiX.
+Your primary role is to provide expertise on cybersecurity, secure system design,
+threat modeling, and security best practices.
+When discussing security topics, prioritize defense-in-depth, principle of least privilege,
+and practical, actionable guidance."""
+)
+
+# Register the new agent
+coordinator.register_agent("security", security_persona)
+
+# Use the new agent
+result = await coordinator.process_with_agent(
+    "security",
+    "How can I securely store private keys for a blockchain application?"
+)
+```
+
+### Customizing Intent Detection
+
+You can extend the intent detection system with new patterns:
+
+```python
+# Add custom intent patterns
+custom_intents = {
+    "security": r"\b(?:security|hack|vulnerability|exploit|secure|protect|encrypt)\b",
+    "finance": r"\b(?:money|finance|investment|stock|crypto|price|cost|value)\b"
+}
+
+# Register with the intent analyzer
+for intent, pattern in custom_intents.items():
+    intent_analyzer.add_intent_pattern(intent, pattern)
 ```
 
 ## Best Practices
 
 ### Effective Query Formulation
 
-For optimal routing:
-- Be specific about what you're asking
-- Include domain-specific keywords when possible
-- For complex queries, explicitly request multiple agent collaboration
+To get the best results from the multi-agent system:
 
-### Agent Design Principles
+1. **Be Specific**: Clearly state your query or task
+2. **Provide Context**: Include relevant background information
+3. **Indicate Domains**: Mention specific domains if you want certain expertise
+4. **Request Collaboration**: For complex problems, explicitly request multi-agent collaboration
 
-When creating custom agents:
-1. **Clear Specialization**: Each agent should have a well-defined domain
-2. **Distinct Personas**: Agents should have clearly differentiated personas
-3. **Comprehensive Instructions**: Include detailed guidance in system prompts
-4. **Example Handling**: Provide examples of how to handle common scenarios
-5. **Error Boundaries**: Define what is and isn't in the agent's domain
+### System Performance Optimization
 
-### Collaboration Optimization
+For optimal performance:
 
-For effective multi-agent collaboration:
-1. Select complementary agents with different expertise
-2. Provide clear instructions about synthesis requirements
-3. For sequential workflows, use the output of one agent as input to another
-4. Consider using the AGI agent as synthesizer for complex collaborations
+1. **Memory Management**: Periodically run memory maintenance to prune old memories
+2. **Context Limitation**: Provide relevant context but avoid overwhelming the system
+3. **Incremental Complexity**: Break down very complex tasks into smaller steps
+4. **Agent Selection**: For specialized tasks, directly select the appropriate agent
 
-### Performance Considerations
+## Troubleshooting
 
-- Agent routing adds overhead - use direct processing for simple queries
-- Multi-agent collaboration increases token usage and processing time
-- Context awareness requires memory retrieval, which has performance implications
-- Cache frequently used agent responses when possible
+### Common Issues
+
+1. **Incorrect Agent Routing**
+   - **Problem**: Query routed to inappropriate agent
+   - **Solution**: Be more explicit about intent or manually specify agent
+
+2. **Context Confusion**
+   - **Problem**: Agent loses track of conversation context
+   - **Solution**: Provide explicit context or reference previous interactions
+
+3. **Multi-Agent Synthesis Failures**
+   - **Problem**: Inconsistent or contradictory multi-agent responses
+   - **Solution**: Break down complex problems or manually review individual agent responses
+
+## Conclusion
+
+The OrganiX Multi-Agent System represents a significant advancement in AI agent architecture, enabling more sophisticated reasoning, domain-specific expertise, and collaborative problem-solving than traditional single-agent approaches. By leveraging specialized agents, intent-based routing, and advanced coordination mechanisms, the system provides higher quality responses, better domain expertise, and more capable handling of complex, multi-domain problems.
+
+Through its integration with MCP, memory systems, and various specialized capabilities, the multi-agent system forms the backbone of the OrganiX platform, enabling increasingly sophisticated AI interactions and capabilities.
