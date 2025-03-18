@@ -1,48 +1,61 @@
-# OrganiX Claude Agent
+# OrganiX Agent
 
-OrganiX is a powerful personal agent with cross-platform capabilities and Model Context Protocol (MCP) integration using the Claude 3.7 API. This agent features enhanced memory capabilities and advanced AI chat functionality.
+![OrganiX](https://x.com/0xOrganix) | [Twitter @0xOrganix](https://x.com/0xOrganix)
 
-## Features
+OrganiX is an advanced AI agent platform with powerful cross-platform capabilities, featuring Claude 3.7 integration, MCP (Model Context Protocol), multi-agent coordination, and blockchain connectivity.
 
-- 🧠 **Advanced Memory System**: Multi-tiered ChromaDB-based memory with episodic, semantic, and procedural memory types
-- 🤖 **Enhanced Claude Integration**: Conversation management, streaming, tool integration, and extended thinking
-- 🔄 **Cross-Platform Operations**: Seamlessly works across Windows and Linux environments
-- 🔍 **Web Research Capabilities**: Integrated with Exa for comprehensive web search and content extraction
-- 🧰 **Full MCP Support**: Extensible tool usage with structured formats
-- 📊 **Rich Terminal Interface**: Beautifully formatted outputs and dashboards using Rich
-- 🔄 **Streaming Support**: Real-time streaming responses from Claude API
-- 💻 **Remote System Connectivity**: SSH integration for remote Ubuntu systems
-- 📈 **Memory Analytics**: Track and analyze memory usage statistics
-- 🔄 **Conversation Management**: Save, load, and switch between conversations
+## Key Features
+
+- 🧠 **Advanced Multi-Agent System**: Specialized agents coordinate to handle different types of queries
+- 🪄 **Zero-Knowledge Integration**: Privacy-preserving verification through ZK proofs
+- 🔗 **Blockchain & Phantom Wallet**: Solana blockchain integration with Phantom wallet connectivity
+- 🛠️ **Full MCP Support**: Integrate external tools using Composio's Model Context Protocol
+- 💡 **AGI Reasoning Capabilities**: Complex reasoning through multi-agent collaboration
+- 🧩 **Enhanced Memory**: Multi-tiered memory system with importance ratings and caching
+- 🔍 **Web Research**: Integrated search and information extraction
+- 💬 **Conversation Management**: Save, load, and manage multiple conversation sessions
+- 🖥️ **Cross-Platform**: Works seamlessly on Windows, Linux, and cloud environments
+- 📱 **Multiple Interfaces**: CLI, Terminal Dashboard, and Web Dashboard options
 
 ## System Architecture
 
 ```mermaid
 graph TD
-    A[User Interface] --> B[ClaudeAgent]
-    B --> C[ClaudeClient]
-    B --> D[MemorySystem]
-    B --> E[MCPManager]
-    B --> F[SystemBridge]
-    B --> G[WebResearcher]
+    User[User] --> UI[User Interface]
+    UI --> Agent[Core Agent]
     
-    C -->|API Calls| H[Claude 3.7 API]
-    D -->|Vector Store| I[ChromaDB]
-    E -->|Tool Registry| J[MCP Tools]
-    F -->|System Operations| K[Local/Remote Systems]
-    G -->|Web Search| L[Exa API]
+    Agent --> MultiAgent[Multi-Agent Coordinator]
+    Agent --> Memory[Memory System]
+    Agent --> MCP[MCP Manager]
     
-    subgraph Memory Types
-        I --> M[Episodic Memory]
-        I --> N[Semantic Memory]
-        I --> O[Procedural Memory]
+    MultiAgent --> ResearchAgent[Research Agent]
+    MultiAgent --> CodeAgent[Code Agent]
+    MultiAgent --> BlockchainAgent[Blockchain Agent]
+    MultiAgent --> MCPAgent[MCP Agent]
+    MultiAgent --> AGIAgent[AGI Reasoning Agent]
+    
+    MCP --> ComposioAPI[Composio API]
+    MCP --> ExternalTools[External Tools]
+    
+    Agent --> Claude[Claude 3.7 API]
+    Agent --> Blockchain[Blockchain Integration]
+    Blockchain --> Solana[Solana Network]
+    Blockchain --> ZK[Zero-Knowledge Proofs]
+    Blockchain --> Phantom[Phantom Wallet]
+    
+    Memory --> EpisodicMem[Episodic Memory]
+    Memory --> SemanticMem[Semantic Memory]
+    Memory --> ProceduralMem[Procedural Memory]
+    
+    subgraph "User Interfaces"
+        CLI[CLI Interface]
+        TUI[Terminal Dashboard]
+        WebUI[Web Dashboard]
     end
     
-    subgraph UI Options
-        A --> P[CLI]
-        A --> Q[Terminal Dashboard]
-        A --> R[Web Dashboard]
-    end
+    UI --> CLI
+    UI --> TUI
+    UI --> WebUI
 ```
 
 ## Memory System
@@ -79,7 +92,9 @@ graph LR
 
 ## Quick Start
 
-### Windows
+### Using the Launch Script (Recommended)
+
+The easiest way to get started is by using the launcher:
 
 1. Clone this repository
 ```bash
@@ -87,43 +102,55 @@ git clone https://github.com/kabrony/claude-agent-mcp.git
 cd claude-agent-mcp
 ```
 
-2. Run `install_dependencies.bat` to set up the environment
+2. Run the launcher for your platform:
+   - Windows: `launch_agent.bat`
+   - Linux/Mac: `./launch_agent.sh`
+
+3. Follow the on-screen menu to initialize your environment and launch the agent
+
+### Manual Setup
+
+1. Clone this repository
+2. Install dependencies:
+   - Windows: `install_dependencies.bat`
+   - Linux/Mac: `./install_dependencies.sh`
 3. Create a `.env` file with your API keys (see Environment Variables section)
-4. Activate the virtual environment: `venv\Scripts\activate`
-5. Run the agent: `python agent.py --query "Your question here"`
-
-### Linux/Mac
-
-1. Clone this repository
-```bash
-git clone https://github.com/kabrony/claude-agent-mcp.git
-cd claude-agent-mcp
-```
-
-2. Make the installation script executable: `chmod +x install_dependencies.sh`
-3. Run `./install_dependencies.sh` to set up the environment
-4. Create a `.env` file with your API keys (see Environment Variables section)
-5. Activate the virtual environment: `source venv/bin/activate`
-6. Run the agent: `python agent.py --query "Your question here"`
+4. Activate the virtual environment:
+   - Windows: `venv\Scripts\activate`
+   - Linux/Mac: `source venv/bin/activate`
+5. Run the agent: `python agent.py`
 
 ## Environment Variables
 
 Create a `.env` file in the project root with the following variables:
 
 ```
+# Required
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+CLAUDE_MODEL=claude-3-7-sonnet-20250219
+
+# Optional - Web Research
 EXA_API_KEY=your_exa_api_key_here
+
+# Optional - MCP Integration
+COMPOSIO_API_KEY=your_composio_api_key_here
+COMPOSIO_CONNECTION_ID=your_composio_connection_id_here
+COMPOSIO_INTEGRATION_ID=your_composio_integration_id_here
+
+# Optional - Blockchain
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_PRIVATE_KEY=your_solana_private_key_here
+
+# Optional - Zero-Knowledge Proofs
+ENABLE_ZK_PROOFS=true
+
+# Optional - Social Media
+TWITTER_BEARER_TOKEN=your_twitter_bearer_token_here
 ```
 
-You can obtain these API keys from:
-- [Anthropic Console](https://console.anthropic.com/)
-- [Exa Dashboard](https://exa.ai/)
-
-## Usage
+## User Interfaces
 
 ### Terminal Dashboard
-
-OrganiX includes a rich terminal dashboard for interactive use:
 
 ```bash
 # Launch the dashboard
@@ -139,13 +166,14 @@ The enhanced dashboard provides:
 - Detailed memory statistics and analytics
 - Tool availability indicators
 - Multiple conversation management
+- Model switching capabilities
 - Interactive query input with extended thinking option
 
-### Basic Commands
+### Command Line Interface
 
 ```bash
 # Process a query
-python agent.py --query "What is the weather today?"
+python agent.py --query "What is quantum computing?"
 
 # Stream a response (real-time output)
 python agent.py --query "Tell me about quantum computing" --stream
@@ -172,104 +200,79 @@ python agent.py --save my_conversation.json
 python agent.py --load my_conversation.json
 ```
 
-### Advanced Usage
+### Web Dashboard
+
+```bash
+# Start the web server
+python web_server.py
+```
+
+Then open your browser to `http://localhost:8080`
+
+## Advanced Features
+
+### Multi-Agent System
+
+OrganiX uses a multi-agent architecture with specialized agents:
+
+| Agent | Expertise |
+|-------|-----------|
+| Research Specialist | Deep research and information synthesis |
+| Code Specialist | High-quality code solutions |
+| Blockchain Specialist | Solana blockchain expertise |
+| MCP Specialist | Model Context Protocol integration |
+| AGI Reasoning Specialist | Complex reasoning and cognition |
 
 ```python
-# Using the agent in your own code
-import asyncio
-from agent import ClaudeAgent
-
-async def main():
-    agent = ClaudeAgent()
-    
-    # Process a query with extended thinking
-    response = await agent.process_query(
-        "What is the meaning of life?", 
-        extended_thinking=True
-    )
-    print(response)
-    
-    # Process a query with tools
-    response = await agent.process_query_with_tools(
-        "What's the current time and weather in New York?"
-    )
-    print(response)
-    
-    # Research a topic
-    research = await agent.research_topic("Artificial intelligence ethics")
-    print(research)
-    
-    # Connect to remote system
-    result = await agent.connect_to_remote("your-server.com", "username", password="password")
-    print(result)
-    
-    # Get memory statistics
-    stats = agent.get_memory_stats()
-    print(stats)
-    
-    # Summarize recent memories
-    summary = agent.summarize_memories(days=7)
-    print(summary)
-    
-    # Create new conversation
-    agent.create_new_conversation("Philosophy Discussion")
-
-asyncio.run(main())
+# Use collaborative reasoning with multiple agents
+result = await coordinator.collaborative_reasoning(
+    "Compare traditional finance with DeFi on Solana",
+    agents=["researcher", "blockchain", "agi_reasoner"]
+)
 ```
 
-## Enhanced Components
+### Blockchain & Phantom Wallet Integration
 
-### Improved Memory System
+```python
+# Get Solana account balance
+balance = await solana_integration.get_solana_balance(address)
 
-The refactored memory system features:
-
-- **Memory Importance Rating**: Prioritize memories by importance
-- **Memory Caching**: Faster retrieval of frequently accessed memories
-- **Timeframe-based Retrieval**: Access memories from specific time periods
-- **Memory Maintenance**: Automatically prune old, low-importance memories
-- **Memory Summarization**: Generate summaries of recent memories
-- **Memory Analytics**: Track and analyze memory usage patterns
-
-### Enhanced Claude Client
-
-The improved Claude client includes:
-
-- **Multiple Conversation Management**: Create, save, and switch between conversations
-- **Tools Integration**: Seamless integration with MCP tools
-- **Extended Thinking Mode**: Enable deeper reasoning for complex queries
-- **Response Analysis**: Extract key points and analyze sentiment
-- **Streaming Support**: Real-time response streaming
-- **Usage Analytics**: Track token usage and API calls
-
-## Project Structure
-
-```
-claude-agent-mcp/
-├── agent.py                # Enhanced main agent implementation
-├── claude_client.py        # Advanced Claude API client with conversation management
-├── dashboard.py            # Rich terminal dashboard with memory analytics
-├── memory_system.py        # Improved memory system with caching and importance ratings
-├── mcp_manager.py          # Model Context Protocol integration
-├── system_bridge.py        # Cross-platform functionality
-├── web_research.py         # Web search capabilities
-├── utils.py                # Utility functions
-├── web_server.py           # Web dashboard backend
-├── web_dashboard/          # Web UI files
-│   └── index.html          # Web dashboard frontend
-├── requirements.txt        # Dependencies
-├── install_dependencies.bat # Windows setup
-└── install_dependencies.sh  # Linux/Mac setup
+# Connect to Phantom wallet
+connection_url = solana_integration.generate_phantom_connection_url(
+    dapp_url="https://example.com",
+    redirect_url="https://example.com/callback"
+)
 ```
 
-## GitHub Integration
+### Zero-Knowledge Proofs
 
-This project is hosted on GitHub at [https://github.com/kabrony/claude-agent-mcp](https://github.com/kabrony/claude-agent-mcp). To contribute:
+```python
+# Create a proof of knowledge
+proof = await zk_proofs.create_proof_of_knowledge(sensitive_data)
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add some amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+# Verify a proof
+verification = zk_proofs.verify_proof(proof)
+```
+
+### MCP Tool Integration
+
+```python
+# Register a custom tool
+mcp_manager.register_tool(
+    "calculate_mortgage",
+    "Calculate mortgage payments",
+    calculate_mortgage_function
+)
+
+# Process with MCP tools
+result = await mcp_manager.process_with_tools(
+    "What's my monthly payment on a $300,000 loan at 4.5% for 30 years?"
+)
+```
+
+## Documentation
+
+For complete documentation, see [DOCUMENTATION.md](DOCUMENTATION.md)
 
 ## Requirements
 
@@ -285,4 +288,6 @@ MIT License
 - Built with [Anthropic Claude 3.7](https://www.anthropic.com/claude)
 - Utilizes [ChromaDB](https://github.com/chroma-core/chroma) for vector storage
 - Enhanced with [Exa](https://exa.ai) for web search capabilities
+- Integrates with [Composio](https://composio.dev) for MCP
+- Connects with [Solana](https://solana.com) and [Phantom](https://phantom.app)
 - Terminal UI powered by [Rich](https://github.com/Textualize/rich)
