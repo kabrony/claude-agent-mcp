@@ -53,3 +53,71 @@ The OrganiX MCP architecture follows a modular design that separates concerns be
 ```
 
 The MCP Manager is the central component that handles tool registration, execution, and coordination. It integrates with the Composio platform for enhanced tool management and connects to the broader OrganiX ecosystem.
+
+## Core Components
+
+### MCP Manager
+
+The `MCPManager` class is the heart of the MCP integration. It:
+
+- Registers tools with unique identifiers and descriptions
+- Tracks tool usage and statistics
+- Handles tool execution and error management
+- Synchronizes with Composio for external tool integration
+- Provides analytics on tool performance and usage patterns
+
+```python
+# Example: Creating and using MCP Manager
+from mcp_manager import MCPManager
+
+# Initialize manager
+mcp = MCPManager()
+
+# Register a tool
+mcp.register_tool(
+    "calculate_average",
+    "Calculate the average of a list of numbers",
+    lambda numbers: sum(numbers) / len(numbers)
+)
+
+# Use the tool
+result = await mcp.process_with_tools("What's the average of 10, 20, and 30?")
+print(result)  # The MCP will identify the tool need and execute it
+```
+
+### Tool Registration
+
+Tools in OrganiX MCP follow a standard format:
+
+- **Name**: Unique identifier for the tool
+- **Description**: Human-readable description of the tool's functionality
+- **Function**: The actual implementation that executes when the tool is called
+- **Metadata**: Optional additional information about the tool
+
+Each tool can have optional input validation, error handling, and usage tracking.
+
+## Tool Integration
+
+OrganiX comes with several built-in tools:
+
+### System Tools
+- `list_files` - List files in a directory
+- `execute_command` - Execute system commands (with security restrictions)
+
+### Web Research Tools
+- `web_search` - Search the web for information
+- `extract_url` - Extract content from a specific URL
+
+### Memory Tools
+- `retrieve_memory` - Retrieve relevant memories
+- `retrieve_memory_by_timeframe` - Get memories from a specific time period
+- `summarize_memories` - Generate summaries of recent memories
+
+### Blockchain Tools
+- `get_solana_balance` - Get SOL balance for an address
+- `get_token_accounts` - Get token accounts for an address
+- `get_nfts` - Get NFTs owned by an address
+
+### Advanced Tools
+- `create_zk_proof` - Create zero-knowledge proofs
+- `verify_zk_proof` - Verify zero-knowledge proofs
