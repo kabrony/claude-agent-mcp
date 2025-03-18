@@ -95,3 +95,72 @@ Tools in OrganiX MCP follow a standard format:
 - **Metadata**: Optional additional information about the tool
 
 Each tool can have optional input validation, error handling, and usage tracking.
+
+## Tool Integration
+
+OrganiX comes with several built-in tools:
+
+### System Tools
+- `list_files` - List files in a directory
+- `execute_command` - Execute system commands (with security restrictions)
+
+### Web Research Tools
+- `web_search` - Search the web for information
+- `extract_url` - Extract content from a specific URL
+
+### Memory Tools
+- `retrieve_memory` - Retrieve relevant memories
+- `retrieve_memory_by_timeframe` - Get memories from a specific time period
+- `summarize_memories` - Generate summaries of recent memories
+
+### Blockchain Tools
+- `get_solana_balance` - Get SOL balance for an address
+- `get_token_accounts` - Get token accounts for an address
+- `get_nfts` - Get NFTs owned by an address
+
+### Advanced Tools
+- `create_zk_proof` - Create zero-knowledge proofs
+- `verify_zk_proof` - Verify zero-knowledge proofs
+
+### Custom Tool Example
+
+Here's an example of creating a custom tool for sentiment analysis:
+
+```python
+from mcp_manager import MCPManager
+
+# Initialize MCP Manager
+mcp = MCPManager()
+
+# Define a sentiment analysis function
+async def analyze_sentiment(text):
+    # Simple sentiment analysis (in a real implementation, use a proper NLP library)
+    positive_words = ["good", "great", "excellent", "amazing", "wonderful", "happy"]
+    negative_words = ["bad", "terrible", "awful", "horrible", "sad", "angry"]
+    
+    positive_count = sum(1 for word in positive_words if word in text.lower())
+    negative_count = sum(1 for word in negative_words if word in text.lower())
+    
+    if positive_count > negative_count:
+        sentiment = "positive"
+    elif negative_count > positive_count:
+        sentiment = "negative"
+    else:
+        sentiment = "neutral"
+        
+    return {
+        "sentiment": sentiment,
+        "positive_score": positive_count,
+        "negative_score": negative_count,
+        "text": text
+    }
+
+# Register the tool with MCP
+mcp.register_tool(
+    "analyze_sentiment",
+    "Analyze the sentiment of a text as positive, negative, or neutral",
+    analyze_sentiment
+)
+
+# Now the language model can use this tool when needed
+```
